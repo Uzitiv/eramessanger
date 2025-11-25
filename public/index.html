@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Плавающий мессенджер</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gradient-1">
+    <!-- Экран авторизации -->
+    <div id="auth-container" class="auth-container">
+        <div class="auth-box">
+            <div class="auth-title">Мессенджер</div>
+            
+            <form id="login-form" class="auth-form">
+                <h3>Вход</h3>
+                <input type="text" class="auth-input" id="login-username" placeholder="Имя пользователя" required>
+                <input type="password" class="auth-input" id="login-password" placeholder="Пароль" required>
+                <button type="submit" class="auth-btn">Войти</button>
+                <div class="auth-switch">
+                    Нет аккаунта? <a href="#" id="show-register">Зарегистрироваться</a>
+                </div>
+                <div class="auth-error" id="login-error"></div>
+            </form>
+
+            <form id="register-form" class="auth-form" style="display: none;">
+                <h3>Регистрация</h3>
+                <input type="text" class="auth-input" id="register-name" placeholder="Ваше имя" required>
+                <input type="text" class="auth-input" id="register-username" placeholder="Имя пользователя" required>
+                <input type="password" class="auth-input" id="register-password" placeholder="Пароль" required>
+                <button type="submit" class="auth-btn">Зарегистрироваться</button>
+                <div class="auth-switch">
+                    Уже есть аккаунт? <a href="#" id="show-login">Войти</a>
+                </div>
+                <div class="auth-error" id="register-error"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Основной интерфейс мессенджера -->
+    <div id="app-container" class="app-container" style="display: none;">
+        <div class="messenger-wrapper">
+            <div class="chats-panel">
+                <div class="chats-header">
+                    <div class="chats-title">Чаты</div>
+                    <button class="new-chat-btn" id="new-chat-btn">+</button>
+                </div>
+                <div class="chats-list" id="chats-list">
+                    <!-- Чаты будут загружаться здесь -->
+                </div>
+            </div>
+            
+            <div class="messenger-container">
+                <div class="messenger-header">
+                    <div class="current-chat-info">
+                        <div class="current-chat-name" id="current-chat-name">Выберите чат</div>
+                        <div class="current-chat-status" id="current-chat-status"></div>
+                    </div>
+                    <div class="header-controls">
+                        <button class="control-btn" id="search-btn">🔍</button>
+                        <button class="control-btn" id="logout-btn">🚪</button>
+                    </div>
+                </div>
+                
+                <div class="messenger-body" id="chat-container">
+                    <!-- Сообщения будут здесь -->
+                    <div class="welcome-message">
+                        <h3>Добро пожаловать в мессенджер!</h3>
+                        <p>Выберите чат для начала общения</p>
+                    </div>
+                </div>
+                
+                <div class="messenger-footer">
+                    <input type="text" class="message-input" placeholder="Введите сообщение..." id="message-input" disabled>
+                    <button class="send-btn" id="send-btn" disabled>➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно поиска пользователей -->
+    <div id="search-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Поиск пользователей</h3>
+                <button class="close-modal" id="close-search-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="search-input" id="user-search-input" placeholder="Введите имя или username...">
+                <div class="search-results" id="user-search-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
