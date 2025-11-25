@@ -58,12 +58,12 @@
                     </div>
                     <div class="header-controls">
                         <button class="control-btn" id="search-btn">🔍</button>
+                        <button class="control-btn" id="settings-btn">⚙️</button>
                         <button class="control-btn" id="logout-btn">🚪</button>
                     </div>
                 </div>
                 
                 <div class="messenger-body" id="chat-container">
-                    <!-- Сообщения будут здесь -->
                     <div class="welcome-message">
                         <h3>Добро пожаловать в мессенджер!</h3>
                         <p>Выберите чат для начала общения</p>
@@ -88,6 +88,124 @@
             <div class="modal-body">
                 <input type="text" class="search-input" id="user-search-input" placeholder="Введите имя или username...">
                 <div class="search-results" id="user-search-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно настроек -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3>Настройки</h3>
+                <button class="close-modal" id="close-settings-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="tab-btn active" data-tab="profile">Профиль</button>
+                    <button class="tab-btn" data-tab="appearance">Внешний вид</button>
+                    <button class="tab-btn" data-tab="background">Фон</button>
+                </div>
+
+                <div class="tab-content active" id="profile-tab">
+                    <div class="profile-settings">
+                        <div class="avatar-section">
+                            <div class="avatar-preview" id="avatar-preview">
+                                <div class="avatar-placeholder" id="avatar-placeholder">?</div>
+                            </div>
+                            <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+                            <button class="upload-btn" id="upload-avatar-btn">Сменить аватар</button>
+                        </div>
+                        <div class="profile-fields">
+                            <div class="form-group">
+                                <label>Имя:</label>
+                                <input type="text" id="profile-name" class="settings-input" placeholder="Ваше имя">
+                            </div>
+                            <div class="form-group">
+                                <label>Статус:</label>
+                                <input type="text" id="profile-status" class="settings-input" placeholder="Ваш статус">
+                            </div>
+                            <div class="form-group">
+                                <label>Username:</label>
+                                <input type="text" id="profile-username" class="settings-input" placeholder="username" readonly>
+                            </div>
+                            <button class="save-btn" id="save-profile-btn">Сохранить профиль</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="appearance-tab">
+                    <div class="appearance-settings">
+                        <div class="form-group">
+                            <label>Прозрачность окон:</label>
+                            <input type="range" id="window-opacity" min="0.3" max="1" step="0.1" value="0.9" class="slider">
+                            <span id="opacity-value">90%</span>
+                        </div>
+                        <div class="form-group">
+                            <label>Размер текста:</label>
+                            <select id="font-size" class="settings-select">
+                                <option value="14px">Маленький</option>
+                                <option value="16px" selected>Средний</option>
+                                <option value="18px">Большой</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Цветовая тема:</label>
+                            <select id="color-theme" class="settings-select">
+                                <option value="blue">Синяя</option>
+                                <option value="purple">Фиолетовая</option>
+                                <option value="green">Зеленая</option>
+                                <option value="orange">Оранжевая</option>
+                                <option value="dark">Темная</option>
+                            </select>
+                        </div>
+                        <button class="save-btn" id="save-appearance-btn">Применить</button>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="background-tab">
+                    <div class="background-settings">
+                        <div class="form-group">
+                            <label>Тип фона:</label>
+                            <select id="background-type" class="settings-select">
+                                <option value="gradient">Градиент</option>
+                                <option value="solid">Сплошной цвет</option>
+                                <option value="gif">GIF</option>
+                                <option value="image">Изображение</option>
+                            </select>
+                        </div>
+                        
+                        <div class="background-options" id="gradient-options">
+                            <div class="gradient-grid">
+                                <div class="gradient-option active" data-gradient="linear-gradient(135deg, #1a1a2e, #16213e)"></div>
+                                <div class="gradient-option" data-gradient="linear-gradient(135deg, #0f3460, #533483)"></div>
+                                <div class="gradient-option" data-gradient="linear-gradient(135deg, #2c3e50, #34495e)"></div>
+                                <div class="gradient-option" data-gradient="linear-gradient(135deg, #141E30, #243B55)"></div>
+                                <div class="gradient-option" data-gradient="linear-gradient(135deg, #232526, #414345)"></div>
+                                <div class="gradient-option" data-gradient="linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b)"></div>
+                            </div>
+                        </div>
+
+                        <div class="background-options" id="solid-options" style="display: none;">
+                            <input type="color" id="solid-color" value="#1a1a2e" class="color-picker">
+                        </div>
+
+                        <div class="background-options" id="gif-options" style="display: none;">
+                            <input type="url" id="gif-url" class="settings-input" placeholder="Введите URL GIF">
+                            <div class="gif-previews">
+                                <div class="gif-option" data-gif="https://media.giphy.com/media/3o7aD2sa2K2V4xJxAY/giphy.gif"></div>
+                                <div class="gif-option" data-gif="https://media.giphy.com/media/l0HU7JI1m1eEwz7K8/giphy.gif"></div>
+                                <div class="gif-option" data-gif="https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif"></div>
+                            </div>
+                        </div>
+
+                        <div class="background-options" id="image-options" style="display: none;">
+                            <input type="file" id="background-upload" accept="image/*" style="display: none;">
+                            <button class="upload-btn" id="upload-background-btn">Загрузить изображение</button>
+                        </div>
+
+                        <button class="save-btn" id="save-background-btn">Применить фон</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
