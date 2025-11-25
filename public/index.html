@@ -3,38 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Плавающий мессенджер</title>
+    <title>✨ Плавающий мессенджер</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gradient-1">
+<body class="bg-gradient-1 theme-dark">
     <!-- Экран авторизации -->
     <div id="auth-container" class="auth-container">
         <div class="auth-box">
-            <div class="auth-title">✨ Мессенджер</div>
+            <div class="auth-title">💬 Плавающий мессенджер</div>
             
             <form id="login-form" class="auth-form">
-                <h3>Вход в аккаунт</h3>
+                <h3>🔐 Вход в аккаунт</h3>
                 <input type="text" class="auth-input" id="login-username" placeholder="Имя пользователя" required>
                 <input type="password" class="auth-input" id="login-password" placeholder="Пароль" required>
-                <button type="submit" class="auth-btn">Войти</button>
+                <button type="submit" class="auth-btn">🚀 Войти</button>
                 <div class="auth-switch">
                     Нет аккаунта? <a href="#" id="show-register">Создать аккаунт</a>
                 </div>
                 <div class="demo-accounts">
-                    <p>Тестовые аккаунты:</p>
-                    <p>👤 user1 / password123</p>
-                    <p>👤 user2 / password123</p>
-                    <p>👤 user3 / password123</p>
+                    <p><strong>Тестовые аккаунты:</strong></p>
+                    <p>👤 user1 / password123 (Анна)</p>
+                    <p>👤 user2 / password123 (Иван)</p>
+                    <p>👤 user3 / password123 (Мария)</p>
+                    <p>👤 user4 / password123 (Алексей)</p>
                 </div>
                 <div class="auth-error" id="login-error"></div>
             </form>
 
             <form id="register-form" class="auth-form" style="display: none;">
-                <h3>Создание аккаунта</h3>
+                <h3>🌟 Создание аккаунта</h3>
                 <input type="text" class="auth-input" id="register-name" placeholder="Ваше имя" required>
                 <input type="text" class="auth-input" id="register-username" placeholder="Имя пользователя" required>
                 <input type="password" class="auth-input" id="register-password" placeholder="Пароль" required>
-                <button type="submit" class="auth-btn">Создать аккаунт</button>
+                <button type="submit" class="auth-btn">🎯 Создать аккаунт</button>
                 <div class="auth-switch">
                     Уже есть аккаунт? <a href="#" id="show-login">Войти</a>
                 </div>
@@ -49,13 +50,15 @@
             <!-- Боковая панель чатов -->
             <div class="chats-panel">
                 <div class="chats-header">
-                    <div class="chats-title">💬 Мои чаты</div>
-                    <button class="new-chat-btn" id="new-chat-btn" title="Новый чат">+</button>
+                    <div class="chats-title">💭 Мои чаты</div>
+                    <button class="new-chat-btn" id="new-chat-btn" title="Найти пользователя">🔍</button>
                 </div>
                 <div class="chats-list" id="chats-list">
                     <div class="no-chats" id="no-chats">
+                        <div class="no-chats-icon">💬</div>
                         <p>Чатов пока нет</p>
                         <p>Найдите пользователей чтобы начать общение</p>
+                        <button class="find-users-btn" id="find-users-btn">🔍 Найти пользователей</button>
                     </div>
                 </div>
             </div>
@@ -64,11 +67,11 @@
             <div class="messenger-container">
                 <div class="messenger-header">
                     <div class="current-chat-info">
-                        <div class="current-chat-name" id="current-chat-name">Выберите чат</div>
+                        <div class="current-chat-name" id="current-chat-name">💬 Выберите чат</div>
                         <div class="current-chat-status" id="current-chat-status">чтобы начать общение</div>
                     </div>
                     <div class="header-controls">
-                        <button class="control-btn" id="search-btn" title="Поиск пользователей">🔍</button>
+                        <button class="control-btn" id="search-btn" title="Поиск пользователей">👥</button>
                         <button class="control-btn" id="settings-btn" title="Настройки">⚙️</button>
                         <button class="control-btn" id="logout-btn" title="Выйти">🚪</button>
                     </div>
@@ -77,13 +80,16 @@
                 <!-- Область сообщений -->
                 <div class="messenger-body" id="chat-container">
                     <div class="welcome-message">
-                        <h3>👋 Добро пожаловать!</h3>
+                        <div class="welcome-icon">👋</div>
+                        <h3>Добро пожаловать в мессенджер!</h3>
                         <p>Выберите чат из списка слева или найдите новых друзей</p>
                         <div class="features-list">
                             <div class="feature">✨ Красивый интерфейс</div>
                             <div class="feature">🎨 Гибкие настройки</div>
                             <div class="feature">🔍 Поиск пользователей</div>
                             <div class="feature">💾 Сохранение настроек</div>
+                            <div class="feature">🌈 Кастомизация тем</div>
+                            <div class="feature">🔮 Свечение окон</div>
                         </div>
                     </div>
                 </div>
@@ -91,7 +97,9 @@
                 <!-- Панель ввода сообщения -->
                 <div class="messenger-footer">
                     <input type="text" class="message-input" placeholder="Введите сообщение..." id="message-input" disabled>
-                    <button class="send-btn" id="send-btn" disabled>➤</button>
+                    <button class="send-btn" id="send-btn" disabled>
+                        <span class="send-icon">📤</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -102,15 +110,18 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>👥 Поиск пользователей</h3>
-                <button class="close-modal" id="close-search-modal">×</button>
+                <button class="close-modal" id="close-search-modal">✕</button>
             </div>
             <div class="modal-body">
                 <div class="search-tips">
-                    <small>Введите имя или username пользователя (минимум 2 символа)</small>
+                    <small>🔍 Введите имя или username пользователя (минимум 2 символа)</small>
                 </div>
                 <input type="text" class="search-input" id="user-search-input" placeholder="Начните вводить имя...">
                 <div class="search-results" id="user-search-results">
-                    <div class="no-results">Начните вводить запрос для поиска</div>
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <p>Начните вводить запрос для поиска</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -120,13 +131,14 @@
     <div id="settings-modal" class="modal">
         <div class="modal-content large-modal">
             <div class="modal-header">
-                <h3>⚙️ Настройки</h3>
-                <button class="close-modal" id="close-settings-modal">×</button>
+                <h3>⚙️ Настройки мессенджера</h3>
+                <button class="close-modal" id="close-settings-modal">✕</button>
             </div>
             <div class="modal-body settings-body">
                 <div class="settings-tabs">
                     <button class="tab-btn active" data-tab="profile">👤 Профиль</button>
-                    <button class="tab-btn" data-tab="appearance">🎨 Внешний вид</button>
+                    <button class="tab-btn" data-tab="theme">🎨 Тема</button>
+                    <button class="tab-btn" data-tab="effects">✨ Эффекты</button>
                     <button class="tab-btn" data-tab="background">🖼️ Фон</button>
                 </div>
 
@@ -134,7 +146,7 @@
                     <div class="profile-settings">
                         <div class="avatar-section">
                             <div class="avatar-preview" id="avatar-preview">
-                                <div class="avatar-placeholder">?</div>
+                                <div class="avatar-placeholder">👤</div>
                             </div>
                             <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
                             <button class="upload-btn" id="upload-avatar-btn">📷 Сменить аватар</button>
@@ -142,61 +154,141 @@
                         </div>
                         <div class="profile-fields">
                             <div class="form-group">
-                                <label>Ваше имя:</label>
+                                <label>📛 Ваше имя:</label>
                                 <input type="text" id="profile-name" class="settings-input" placeholder="Введите ваше имя">
                             </div>
                             <div class="form-group">
-                                <label>Статус:</label>
+                                <label>💬 Статус:</label>
                                 <input type="text" id="profile-status" class="settings-input" placeholder="Например: в сети, занят...">
                             </div>
                             <div class="form-group">
-                                <label>Username:</label>
-                                <input type="text" id="profile-username" class="settings-input" readonly>
-                                <small>Username нельзя изменить</small>
+                                <label>🔑 Username:</label>
+                                <div class="username-group">
+                                    <input type="text" id="profile-username" class="settings-input" placeholder="username">
+                                    <button class="change-btn" id="change-username-btn">🔄 Сменить</button>
+                                </div>
+                                <small>Можно сменить если не занят</small>
                             </div>
                             <button class="save-btn" id="save-profile-btn">💾 Сохранить профиль</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="tab-content" id="appearance-tab">
-                    <div class="appearance-settings">
+                <div class="tab-content" id="theme-tab">
+                    <div class="theme-settings">
                         <div class="form-group">
-                            <label>Прозрачность окон: <span id="opacity-value">90%</span></label>
+                            <label>🎨 Цветовая тема:</label>
+                            <div class="theme-grid">
+                                <div class="theme-option active" data-theme="dark">
+                                    <div class="theme-preview dark-theme"></div>
+                                    <span>Темная</span>
+                                </div>
+                                <div class="theme-option" data-theme="light">
+                                    <div class="theme-preview light-theme"></div>
+                                    <span>Светлая</span>
+                                </div>
+                                <div class="theme-option" data-theme="gray">
+                                    <div class="theme-preview gray-theme"></div>
+                                    <span>Серая</span>
+                                </div>
+                                <div class="theme-option" data-theme="dark-gray">
+                                    <div class="theme-preview dark-gray-theme"></div>
+                                    <span>Темно-серая</span>
+                                </div>
+                                <div class="theme-option" data-theme="blue">
+                                    <div class="theme-preview blue-theme"></div>
+                                    <span>Синяя</span>
+                                </div>
+                                <div class="theme-option" data-theme="purple">
+                                    <div class="theme-preview purple-theme"></div>
+                                    <span>Фиолетовая</span>
+                                </div>
+                                <div class="theme-option" data-theme="green">
+                                    <div class="theme-preview green-theme"></div>
+                                    <span>Зеленая</span>
+                                </div>
+                                <div class="theme-option" data-theme="orange">
+                                    <div class="theme-preview orange-theme"></div>
+                                    <span>Оранжевая</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>🔧 Дополнительные настройки:</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="compact-mode" class="checkbox">
+                                    <span class="checkmark"></span>
+                                    Компактный режим
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="rounded-corners" class="checkbox" checked>
+                                    <span class="checkmark"></span>
+                                    Закругленные углы
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="animations" class="checkbox" checked>
+                                    <span class="checkmark"></span>
+                                    Анимации
+                                </label>
+                            </div>
+                        </div>
+
+                        <button class="save-btn" id="save-theme-btn">💾 Применить тему</button>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="effects-tab">
+                    <div class="effects-settings">
+                        <div class="form-group">
+                            <label>🔮 Прозрачность окон: <span id="opacity-value">90%</span></label>
                             <input type="range" id="window-opacity" min="0.3" max="1" step="0.1" value="0.9" class="slider">
                         </div>
+                        
                         <div class="form-group">
-                            <label>Размер текста сообщений:</label>
+                            <label>🌈 Цвет свечения:</label>
+                            <div class="glow-color-grid">
+                                <div class="glow-color-option active" data-color="#007AFF" style="background: #007AFF"></div>
+                                <div class="glow-color-option" data-color="#5856D6" style="background: #5856D6"></div>
+                                <div class="glow-color-option" data-color="#FF2D55" style="background: #FF2D55"></div>
+                                <div class="glow-color-option" data-color="#FF9500" style="background: #FF9500"></div>
+                                <div class="glow-color-option" data-color="#4CD964" style="background: #4CD964"></div>
+                                <div class="glow-color-option" data-color="#5AC8FA" style="background: #5AC8FA"></div>
+                                <div class="glow-color-option" data-color="#FFCC00" style="background: #FFCC00"></div>
+                                <div class="glow-color-option" data-color="#8E8E93" style="background: #8E8E93"></div>
+                            </div>
+                            <input type="color" id="glow-color-custom" class="color-picker" value="#007AFF">
+                        </div>
+
+                        <div class="form-group">
+                            <label>💫 Интенсивность свечения: <span id="glow-intensity-value">30%</span></label>
+                            <input type="range" id="glow-intensity" min="0.1" max="0.8" step="0.1" value="0.3" class="slider">
+                        </div>
+
+                        <div class="form-group">
+                            <label>📏 Размер текста сообщений:</label>
                             <select id="font-size" class="settings-select">
-                                <option value="13px">Маленький</option>
+                                <option value="12px">Маленький</option>
                                 <option value="14px" selected>Средний</option>
                                 <option value="16px">Большой</option>
                                 <option value="18px">Очень большой</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label>Цветовая тема:</label>
-                            <select id="color-theme" class="settings-select">
-                                <option value="blue">🔵 Синяя</option>
-                                <option value="purple">🟣 Фиолетовая</option>
-                                <option value="green">🟢 Зеленая</option>
-                                <option value="orange">🟠 Оранжевая</option>
-                                <option value="dark">⚫ Темная</option>
-                            </select>
-                        </div>
-                        <button class="save-btn" id="save-appearance-btn">💾 Применить настройки</button>
+
+                        <button class="save-btn" id="save-effects-btn">💾 Применить эффекты</button>
                     </div>
                 </div>
 
                 <div class="tab-content" id="background-tab">
                     <div class="background-settings">
                         <div class="form-group">
-                            <label>Тип фона:</label>
+                            <label>🖼️ Тип фона:</label>
                             <select id="background-type" class="settings-select">
                                 <option value="gradient">🌈 Градиент</option>
                                 <option value="solid">🎨 Сплошной цвет</option>
                                 <option value="gif">🔄 GIF анимация</option>
-                                <option value="image">🖼️ Изображение</option>
+                                <option value="image">📷 Изображение</option>
                             </select>
                         </div>
                         
@@ -209,6 +301,8 @@
                                 <div class="gradient-option" data-gradient="linear-gradient(135deg, #141E30, #243B55)" style="background: linear-gradient(135deg, #141E30, #243B55)"></div>
                                 <div class="gradient-option" data-gradient="linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b)" style="background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b)"></div>
                                 <div class="gradient-option" data-gradient="linear-gradient(135deg, #11998e, #38ef7d)" style="background: linear-gradient(135deg, #11998e, #38ef7d)"></div>
+                                <div class="gradient-option" data-gradient="linear-gradient(135deg, #fc466b, #3f5efb)" style="background: linear-gradient(135deg, #fc466b, #3f5efb)"></div>
+                                <div class="gradient-option" data-gradient="linear-gradient(135deg, #f46b45, #eea849)" style="background: linear-gradient(135deg, #f46b45, #eea849)"></div>
                             </div>
                         </div>
 
@@ -223,6 +317,7 @@
                                 <div class="gif-option" data-gif="https://media.giphy.com/media/3o7aD2sa2K2V4xJxAY/giphy.gif" style="background-image: url('https://media.giphy.com/media/3o7aD2sa2K2V4xJxAY/giphy.gif')"></div>
                                 <div class="gif-option" data-gif="https://media.giphy.com/media/l0HU7JI1m1eEwz7K8/giphy.gif" style="background-image: url('https://media.giphy.com/media/l0HU7JI1m1eEwz7K8/giphy.gif')"></div>
                                 <div class="gif-option" data-gif="https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif" style="background-image: url('https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif')"></div>
+                                <div class="gif-option" data-gif="https://media.giphy.com/media/3o72FfM5HJydzafgUE/giphy.gif" style="background-image: url('https://media.giphy.com/media/3o72FfM5HJydzafgUE/giphy.gif')"></div>
                             </div>
                             <div class="form-group">
                                 <label>Или введите URL GIF:</label>
