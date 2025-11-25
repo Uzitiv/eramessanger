@@ -26,6 +26,7 @@ db.serialize(() => {
     name TEXT,
     status TEXT DEFAULT 'в сети',
     avatar TEXT,
+    settings TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
@@ -35,7 +36,6 @@ db.serialize(() => {
     sender_id INTEGER,
     receiver_id INTEGER,
     text TEXT,
-    type TEXT,
     time DATETIME DEFAULT CURRENT_TIMESTAMP,
     read BOOLEAN DEFAULT FALSE,
     FOREIGN KEY(sender_id) REFERENCES users(id),
@@ -52,11 +52,15 @@ db.serialize(() => {
     FOREIGN KEY(user2_id) REFERENCES users(id)
   )`);
 
-  // Создаем тестового пользователя
+  // Создаем тестовых пользователей
   bcrypt.hash('password123', 10, (err, hash) => {
     if (!err) {
       db.run('INSERT INTO users (username, password, name) VALUES (?, ?, ?)', 
-        ['testuser', hash, 'Тестовый Пользователь']);
+        ['user1', hash, 'Анна']);
+      db.run('INSERT INTO users (username, password, name) VALUES (?, ?, ?)', 
+        ['user2', hash, 'Иван']);
+      db.run('INSERT INTO users (username, password, name) VALUES (?, ?, ?)', 
+        ['user3', hash, 'Мария']);
     }
   });
 });
@@ -90,8 +94,8 @@ app.post('/api/register', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    db.run('INSERT INTO users (username, password, name) VALUES (?, ?, ?)', 
-      [username, hashedPassword, name], function(err) {
+    db.run('INSERT INTO users (username, password, name, settings) VALUES (?, ?, ?, ?)', 
+      [username, hashedPassword, name, JSON.stringify({})], function(err) {
         if (err) {
           if (err.message.includes('UNIQUE constraint failed')) {
             return res.status(400).json({ error: 'Пользователь с таким именем уже существует' });
@@ -159,14 +163,16 @@ app.post('/api/login', (req, res) => {
 app.get('/api/users/search', authenticateToken, (req, res) => {
   const { query } = req.query;
 
-  if (!query) {
-    return res.status(400).json({ error: 'Запрос не может быть пустым' });
+  if (!query || query.length < 2) {
+    return res.status(400).json({ error: 'Запрос должен содержать минимум 2 символа' });
   }
 
-  db.all('SELECT id, username, name, status, avatar FROM users WHERE (username LIKE ? OR name LIKE ?) AND id != ?', 
+  db.all(`SELECT id, username, name, status, avatar FROM users 
+          WHERE (username LIKE ? OR name LIKE ?) AND id != ?`, 
     [`%${query}%`, `%${query}%`, req.user.id], (err, users) => {
       if (err) {
-        return res.status(500).json({ error: 'Ошибка сервера' });
+        console.error('Search error:', err);
+        return res.status(500).json({ error: 'Ошибка поиска' });
       }
       res.json(users);
     });
@@ -176,7 +182,7 @@ app.get('/api/users/search', authenticateToken, (req, res) => {
 app.get('/api/chats', authenticateToken, (req, res) => {
   const userId = req.user.id;
 
-  db.all(`
+  const query = `
     SELECT c.id, 
            CASE 
              WHEN c.user1_id = ? THEN u2.id 
@@ -198,20 +204,26 @@ app.get('/api/chats', authenticateToken, (req, res) => {
              WHEN c.user1_id = ? THEN u2.avatar 
              ELSE u1.avatar 
            END as avatar,
-           (SELECT text FROM messages WHERE (sender_id = ? AND receiver_id = other_user_id) OR 
-            (sender_id = other_user_id AND receiver_id = ?) ORDER BY time DESC LIMIT 1) as lastMessage,
-           (SELECT COUNT(*) FROM messages WHERE sender_id = other_user_id AND receiver_id = ? AND read = FALSE) as unread
+           (SELECT text FROM messages 
+            WHERE (sender_id = ? AND receiver_id = other_user_id) 
+               OR (sender_id = other_user_id AND receiver_id = ?) 
+            ORDER BY time DESC LIMIT 1) as lastMessage,
+           (SELECT COUNT(*) FROM messages 
+            WHERE sender_id = other_user_id AND receiver_id = ? AND read = FALSE) as unread
     FROM chats c
     JOIN users u1 ON c.user1_id = u1.id
     JOIN users u2 ON c.user2_id = u2.id
     WHERE c.user1_id = ? OR c.user2_id = ?
-  `, [userId, userId, userId, userId, userId, userId, userId, userId, userId], (err, chats) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Ошибка сервера' });
-    }
-    res.json(chats);
-  });
+  `;
+
+  db.all(query, [userId, userId, userId, userId, userId, userId, userId, userId, userId, userId], 
+    (err, chats) => {
+      if (err) {
+        console.error('Chats error:', err);
+        return res.status(500).json({ error: 'Ошибка загрузки чатов' });
+      }
+      res.json(chats);
+    });
 });
 
 // Получение сообщений чата
@@ -219,26 +231,34 @@ app.get('/api/chats/:chatId/messages', authenticateToken, (req, res) => {
   const { chatId } = req.params;
   const userId = req.user.id;
 
-  db.get('SELECT * FROM chats WHERE id = ? AND (user1_id = ? OR user2_id = ?)', [chatId, userId, userId], (err, chat) => {
-    if (err || !chat) {
-      return res.status(404).json({ error: 'Чат не найден' });
-    }
-
-    const otherUserId = chat.user1_id === userId ? chat.user2_id : chat.user1_id;
-
-    db.all(`
-      SELECT m.*, u.name as sender_name
-      FROM messages m
-      JOIN users u ON m.sender_id = u.id
-      WHERE (m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?)
-      ORDER BY m.time ASC
-    `, [userId, otherUserId, otherUserId, userId], (err, messages) => {
-      if (err) {
-        return res.status(500).json({ error: 'Ошибка сервера' });
+  db.get('SELECT * FROM chats WHERE id = ? AND (user1_id = ? OR user2_id = ?)', 
+    [chatId, userId, userId], (err, chat) => {
+      if (err || !chat) {
+        return res.status(404).json({ error: 'Чат не найден' });
       }
-      res.json(messages);
+
+      const otherUserId = chat.user1_id === userId ? chat.user2_id : chat.user1_id;
+
+      db.all(`
+        SELECT m.*, 
+               u.name as sender_name,
+               CASE 
+                 WHEN m.sender_id = ? THEN 'outgoing' 
+                 ELSE 'incoming' 
+               END as type
+        FROM messages m
+        JOIN users u ON m.sender_id = u.id
+        WHERE (m.sender_id = ? AND m.receiver_id = ?) 
+           OR (m.sender_id = ? AND m.receiver_id = ?)
+        ORDER BY m.time ASC
+      `, [userId, userId, otherUserId, otherUserId, userId], (err, messages) => {
+        if (err) {
+          console.error('Messages error:', err);
+          return res.status(500).json({ error: 'Ошибка загрузки сообщений' });
+        }
+        res.json(messages);
+      });
     });
-  });
 });
 
 // Отправка сообщения
@@ -247,36 +267,41 @@ app.post('/api/chats/:chatId/messages', authenticateToken, (req, res) => {
   const { text } = req.body;
   const userId = req.user.id;
 
-  if (!text) {
+  if (!text || text.trim() === '') {
     return res.status(400).json({ error: 'Сообщение не может быть пустым' });
   }
 
-  db.get('SELECT * FROM chats WHERE id = ? AND (user1_id = ? OR user2_id = ?)', [chatId, userId, userId], (err, chat) => {
-    if (err || !chat) {
-      return res.status(404).json({ error: 'Чат не найден' });
-    }
+  db.get('SELECT * FROM chats WHERE id = ? AND (user1_id = ? OR user2_id = ?)', 
+    [chatId, userId, userId], (err, chat) => {
+      if (err || !chat) {
+        return res.status(404).json({ error: 'Чат не найден' });
+      }
 
-    const receiverId = chat.user1_id === userId ? chat.user2_id : chat.user1_id;
+      const receiverId = chat.user1_id === userId ? chat.user2_id : chat.user1_id;
 
-    db.run('INSERT INTO messages (sender_id, receiver_id, text, type) VALUES (?, ?, ?, ?)', 
-      [userId, receiverId, text, 'outgoing'], function(err) {
-        if (err) {
-          return res.status(500).json({ error: 'Ошибка отправки сообщения' });
-        }
-
-        db.get(`
-          SELECT m.*, u.name as sender_name
-          FROM messages m
-          JOIN users u ON m.sender_id = u.id
-          WHERE m.id = ?
-        `, [this.lastID], (err, message) => {
+      db.run('INSERT INTO messages (sender_id, receiver_id, text) VALUES (?, ?, ?)', 
+        [userId, receiverId, text.trim()], function(err) {
           if (err) {
-            return res.status(500).json({ error: 'Ошибка получения сообщения' });
+            console.error('Send message error:', err);
+            return res.status(500).json({ error: 'Ошибка отправки сообщения' });
           }
-          res.json(message);
+
+          // Получаем созданное сообщение
+          db.get(`
+            SELECT m.*, 
+                   u.name as sender_name,
+                   'outgoing' as type
+            FROM messages m
+            JOIN users u ON m.sender_id = u.id
+            WHERE m.id = ?
+          `, [this.lastID], (err, message) => {
+            if (err) {
+              return res.status(500).json({ error: 'Ошибка получения сообщения' });
+            }
+            res.json(message);
+          });
         });
-      });
-  });
+    });
 });
 
 // Создание нового чата
@@ -288,40 +313,38 @@ app.post('/api/chats', authenticateToken, (req, res) => {
     return res.status(400).json({ error: 'Нельзя создать чат с самим собой' });
   }
 
-  db.get('SELECT * FROM chats WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)', 
-    [currentUserId, otherUserId, otherUserId, currentUserId], (err, existingChat) => {
-      if (err) {
-        return res.status(500).json({ error: 'Ошибка сервера' });
-      }
-
-      if (existingChat) {
-        return res.status(400).json({ error: 'Чат уже существует' });
-      }
-
-      db.run('INSERT INTO chats (user1_id, user2_id) VALUES (?, ?)', [currentUserId, otherUserId], function(err) {
-        if (err) {
-          return res.status(500).json({ error: 'Ошибка создания чата' });
-        }
-
-        res.json({ id: this.lastID, message: 'Чат успешно создан' });
-      });
-    });
-});
-
-// Обновление профиля
-app.put('/api/profile', authenticateToken, (req, res) => {
-  const { name, status } = req.body;
-  const userId = req.user.id;
-
-  db.run('UPDATE users SET name = ?, status = ? WHERE id = ?', [name, status, userId], function(err) {
-    if (err) {
-      return res.status(500).json({ error: 'Ошибка обновления профиля' });
+  // Проверяем существование пользователя
+  db.get('SELECT id FROM users WHERE id = ?', [otherUserId], (err, user) => {
+    if (err || !user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
     }
 
-    res.json({ message: 'Профиль обновлен' });
+    // Проверяем, существует ли уже чат
+    db.get(`SELECT * FROM chats 
+            WHERE (user1_id = ? AND user2_id = ?) 
+               OR (user1_id = ? AND user2_id = ?)`, 
+      [currentUserId, otherUserId, otherUserId, currentUserId], (err, existingChat) => {
+        if (err) {
+          return res.status(500).json({ error: 'Ошибка сервера' });
+        }
+
+        if (existingChat) {
+          return res.json({ id: existingChat.id, message: 'Чат уже существует' });
+        }
+
+        // Создаем новый чат
+        db.run('INSERT INTO chats (user1_id, user2_id) VALUES (?, ?)', 
+          [currentUserId, otherUserId], function(err) {
+            if (err) {
+              console.error('Create chat error:', err);
+              return res.status(500).json({ error: 'Ошибка создания чата' });
+            }
+
+            res.json({ id: this.lastID, message: 'Чат успешно создан' });
+          });
+      });
   });
 });
-// Добавь эти эндпоинты перед app.listen(PORT, ...)
 
 // Обновление профиля
 app.put('/api/profile', authenticateToken, (req, res) => {
@@ -345,7 +368,7 @@ app.put('/api/profile', authenticateToken, (req, res) => {
     });
 });
 
-// Получение настроек пользователя
+// Получение настроек
 app.get('/api/settings', authenticateToken, (req, res) => {
   const userId = req.user.id;
   
@@ -354,12 +377,30 @@ app.get('/api/settings', authenticateToken, (req, res) => {
       return res.status(500).json({ error: 'Ошибка получения настроек' });
     }
     
-    const settings = row?.settings ? JSON.parse(row.settings) : {};
-    res.json(settings);
+    try {
+      const settings = row?.settings ? JSON.parse(row.settings) : {
+        windowOpacity: 0.9,
+        fontSize: '14px',
+        background: {
+          type: 'gradient',
+          value: 'linear-gradient(135deg, #1a1a2e, #16213e)'
+        }
+      };
+      res.json(settings);
+    } catch (e) {
+      res.json({
+        windowOpacity: 0.9,
+        fontSize: '14px',
+        background: {
+          type: 'gradient',
+          value: 'linear-gradient(135deg, #1a1a2e, #16213e)'
+        }
+      });
+    }
   });
 });
 
-// Сохранение настроек пользователя
+// Сохранение настроек
 app.post('/api/settings', authenticateToken, (req, res) => {
   const userId = req.user.id;
   const settings = req.body;
@@ -373,15 +414,23 @@ app.post('/api/settings', authenticateToken, (req, res) => {
     });
 });
 
-// Загрузка файлов (аватарки)
-app.post('/api/upload', authenticateToken, (req, res) => {
-  // В реальном приложении здесь была бы обработка файлов
-  // Для демо просто возвращаем успех
+// Загрузка аватарки (демо-версия)
+app.post('/api/upload/avatar', authenticateToken, (req, res) => {
+  // В реальном приложении здесь была бы загрузка файла
+  const { avatarData } = req.body;
+  
+  if (!avatarData) {
+    return res.status(400).json({ error: 'Данные аватарки отсутствуют' });
+  }
+
   res.json({ 
-    message: 'Файл загружен', 
-    url: 'https://via.placeholder.com/150/007AFF/FFFFFF?text=Avatar' 
+    success: true, 
+    avatarUrl: avatarData,
+    message: 'Аватар успешно обновлен' 
   });
 });
+
 app.listen(PORT, () => {
-  console.log(`Сервер запущен на порту ${PORT}`);
+  console.log(`✅ Сервер запущен на порту ${PORT}`);
+  console.log(`📱 Открой http://localhost:${PORT} в браузере`);
 });
