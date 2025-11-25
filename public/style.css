@@ -456,3 +456,210 @@ body {
     font-size: 12px;
     opacity: 0.7;
 }
+/* Стили для настроек */
+.large-modal {
+    width: 600px;
+    max-width: 95%;
+}
+
+.settings-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.profile-settings {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.avatar-section {
+    text-align: center;
+}
+
+.avatar-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    margin-bottom: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 36px;
+    background-size: cover;
+    background-position: center;
+}
+
+.upload-btn {
+    padding: 8px 16px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.profile-fields {
+    flex: 1;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.settings-input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(60, 60, 60, 0.7);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.settings-select {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(60, 60, 60, 0.7);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.save-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.slider {
+    width: 100%;
+    margin: 10px 0;
+}
+
+.background-options {
+    margin: 15px 0;
+}
+
+.gradient-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.gradient-option {
+    height: 60px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.gradient-option.active {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.color-picker {
+    width: 100%;
+    height: 60px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.gif-previews {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.gif-option {
+    height: 80px;
+    border-radius: 8px;
+    cursor: pointer;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.gif-option:hover {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+/* Прозрачность окон */
+.chats-panel, .messenger-container {
+    transition: opacity 0.3s ease;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-content {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .profile-settings {
+        flex-direction: column;
+    }
+    
+    .gradient-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .large-modal {
+        width: 95%;
+        margin: 10px;
+    }
+}
