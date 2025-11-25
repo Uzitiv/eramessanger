@@ -8,6 +8,7 @@
     --message-incoming: rgba(60, 60, 60, 0.7);
     --message-outgoing: rgba(0, 122, 255, 0.8);
     --border-color: rgba(255, 255, 255, 0.1);
+    --message-font-size: 14px;
 }
 
 * {
@@ -24,6 +25,9 @@ body {
     justify-content: center;
     align-items: center;
     padding: 20px;
+    transition: all 0.5s ease;
+    background-size: cover;
+    background-position: center;
 }
 
 /* Стили авторизации */
@@ -64,11 +68,13 @@ body {
     background: rgba(60, 60, 60, 0.7);
     color: var(--text-primary);
     font-size: 16px;
+    transition: all 0.3s ease;
 }
 
 .auth-input:focus {
     outline: none;
     background: rgba(70, 70, 70, 0.8);
+    transform: scale(1.02);
 }
 
 .auth-btn {
@@ -81,20 +87,24 @@ body {
     font-size: 16px;
     cursor: pointer;
     margin-bottom: 15px;
+    transition: all 0.3s ease;
 }
 
 .auth-btn:hover {
     background: #0056cc;
+    transform: scale(1.02);
 }
 
 .auth-switch {
     text-align: center;
     color: var(--text-secondary);
+    margin-bottom: 15px;
 }
 
 .auth-switch a {
     color: var(--primary-color);
     text-decoration: none;
+    font-weight: 500;
 }
 
 .auth-error {
@@ -102,6 +112,23 @@ body {
     text-align: center;
     margin-top: 10px;
     font-size: 14px;
+    padding: 10px;
+    background: rgba(255, 59, 48, 0.1);
+    border-radius: 8px;
+}
+
+.demo-accounts {
+    background: rgba(0, 122, 255, 0.1);
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 15px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.demo-accounts p {
+    margin: 5px 0;
 }
 
 /* Основной интерфейс */
@@ -128,6 +155,7 @@ body {
     flex-direction: column;
     overflow: hidden;
     border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
 }
 
 .chats-header {
@@ -154,6 +182,12 @@ body {
     color: white;
     cursor: pointer;
     font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.new-chat-btn:hover {
+    background: #0056cc;
+    transform: scale(1.1);
 }
 
 .chats-list {
@@ -162,24 +196,38 @@ body {
     padding: 10px;
 }
 
+.no-chats {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 40px 20px;
+}
+
+.no-chats p {
+    margin: 10px 0;
+}
+
 .chat-item {
     padding: 15px;
     border-radius: 12px;
     margin-bottom: 8px;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     gap: 12px;
     color: var(--text-primary);
+    border: 1px solid transparent;
 }
 
 .chat-item:hover {
     background: rgba(255, 255, 255, 0.1);
+    border-color: var(--border-color);
+    transform: translateX(5px);
 }
 
 .chat-item.active {
-    background: rgba(0, 122, 255, 0.3);
+    background: rgba(0, 122, 255, 0.2);
+    border-color: var(--primary-color);
 }
 
 .chat-avatar {
@@ -192,15 +240,21 @@ body {
     align-items: center;
     color: white;
     font-weight: 600;
+    background-size: cover;
+    background-position: center;
 }
 
 .chat-info {
     flex: 1;
+    min-width: 0;
 }
 
 .chat-name {
     font-weight: 500;
     margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .chat-preview {
@@ -218,6 +272,8 @@ body {
     padding: 2px 8px;
     font-size: 12px;
     font-weight: 600;
+    min-width: 20px;
+    text-align: center;
 }
 
 .messenger-container {
@@ -230,6 +286,7 @@ body {
     flex-direction: column;
     overflow: hidden;
     border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
 }
 
 .messenger-header {
@@ -268,6 +325,13 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.control-btn:hover {
+    background: rgba(80, 80, 80, 0.9);
+    transform: scale(1.1);
 }
 
 .messenger-body {
@@ -285,13 +349,47 @@ body {
     margin-top: 50px;
 }
 
+.welcome-message h3 {
+    margin-bottom: 15px;
+    font-size: 24px;
+}
+
+.features-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.feature {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
 .message {
     max-width: 70%;
     padding: 12px 16px;
     border-radius: 18px;
-    font-size: 15px;
+    font-size: var(--message-font-size);
     line-height: 1.4;
     position: relative;
+    animation: messageAppear 0.3s ease;
+}
+
+@keyframes messageAppear {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .message-incoming {
@@ -332,6 +430,17 @@ body {
     color: var(--text-primary);
     outline: none;
     font-size: 15px;
+    transition: all 0.3s ease;
+}
+
+.message-input:focus {
+    background: rgba(70, 70, 70, 0.8);
+    transform: scale(1.02);
+}
+
+.message-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .send-btn {
@@ -345,11 +454,19 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.send-btn:hover:not(:disabled) {
+    background: #0056cc;
+    transform: scale(1.1);
 }
 
 .send-btn:disabled {
     background: #666;
     cursor: not-allowed;
+    transform: none;
 }
 
 /* Модальные окна */
@@ -360,14 +477,27 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(5px);
 }
 
 .modal.active {
     display: flex;
+    animation: modalAppear 0.3s ease;
+}
+
+@keyframes modalAppear {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(5px);
+    }
 }
 
 .modal-content {
@@ -376,20 +506,28 @@ body {
     padding: 20px;
     width: 400px;
     max-width: 90%;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border-color);
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.large-modal {
+    width: 600px;
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
     border-bottom: 1px solid var(--border-color);
 }
 
 .modal-header h3 {
     color: var(--text-primary);
+    margin: 0;
 }
 
 .close-modal {
@@ -398,6 +536,24 @@ body {
     color: var(--text-primary);
     font-size: 24px;
     cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.close-modal:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+}
+
+.search-tips {
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    font-size: 12px;
 }
 
 .search-input {
@@ -409,6 +565,7 @@ body {
     color: var(--text-primary);
     outline: none;
     margin-bottom: 15px;
+    font-size: 15px;
 }
 
 .search-results {
@@ -416,25 +573,34 @@ body {
     overflow-y: auto;
 }
 
+.no-results {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 40px 20px;
+}
+
 .user-result {
     padding: 12px;
     border-radius: 12px;
     margin-bottom: 8px;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: all 0.3s ease;
     color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    border: 1px solid transparent;
 }
 
 .user-result:hover {
     background: rgba(255, 255, 255, 0.1);
+    border-color: var(--border-color);
+    transform: translateX(5px);
 }
 
 .user-avatar {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: var(--primary-color);
     display: flex;
@@ -442,6 +608,8 @@ body {
     align-items: center;
     color: white;
     font-weight: 600;
+    background-size: cover;
+    background-position: center;
 }
 
 .user-info {
@@ -450,37 +618,48 @@ body {
 
 .user-name {
     font-weight: 500;
+    margin-bottom: 2px;
 }
 
 .user-username {
     font-size: 12px;
     opacity: 0.7;
 }
-/* Стили для настроек */
-.large-modal {
-    width: 600px;
-    max-width: 95%;
+
+/* Настройки */
+.settings-body {
+    max-height: 60vh;
+    overflow-y: auto;
 }
 
 .settings-tabs {
     display: flex;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 20px;
+    gap: 5px;
 }
 
 .tab-btn {
-    padding: 10px 20px;
+    padding: 12px 20px;
     background: none;
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
     border-bottom: 2px solid transparent;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
+    border-radius: 8px 8px 0 0;
+    font-size: 14px;
+    white-space: nowrap;
 }
 
 .tab-btn.active {
     color: var(--primary-color);
     border-bottom-color: var(--primary-color);
+    background: rgba(0, 122, 255, 0.1);
+}
+
+.tab-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .tab-content {
@@ -489,6 +668,18 @@ body {
 
 .tab-content.active {
     display: block;
+    animation: tabFade 0.3s ease;
+}
+
+@keyframes tabFade {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .profile-settings {
@@ -499,6 +690,7 @@ body {
 
 .avatar-section {
     text-align: center;
+    flex-shrink: 0;
 }
 
 .avatar-preview {
@@ -515,6 +707,11 @@ body {
     font-size: 36px;
     background-size: cover;
     background-position: center;
+    border: 3px solid var(--border-color);
+}
+
+.avatar-placeholder {
+    font-size: 36px;
 }
 
 .upload-btn {
@@ -525,6 +722,13 @@ body {
     border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
+    transition: all 0.3s ease;
+    margin-bottom: 5px;
+}
+
+.upload-btn:hover {
+    background: #0056cc;
+    transform: scale(1.05);
 }
 
 .profile-fields {
@@ -532,34 +736,53 @@ body {
 }
 
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .form-group label {
     display: block;
     color: var(--text-primary);
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     font-size: 14px;
+    font-weight: 500;
 }
 
 .settings-input {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     border: none;
     border-radius: 8px;
     background: rgba(60, 60, 60, 0.7);
     color: var(--text-primary);
     font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.settings-input:focus {
+    outline: none;
+    background: rgba(70, 70, 70, 0.8);
+    transform: scale(1.02);
+}
+
+.settings-input:read-only {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 .settings-select {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     border: none;
     border-radius: 8px;
     background: rgba(60, 60, 60, 0.7);
     color: var(--text-primary);
     font-size: 14px;
+    cursor: pointer;
+}
+
+.settings-select:focus {
+    outline: none;
+    background: rgba(70, 70, 70, 0.8);
 }
 
 .save-btn {
@@ -572,15 +795,39 @@ body {
     cursor: pointer;
     font-size: 16px;
     margin-top: 10px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.save-btn:hover {
+    background: #0056cc;
+    transform: scale(1.02);
 }
 
 .slider {
     width: 100%;
     margin: 10px 0;
+    cursor: pointer;
+}
+
+.appearance-settings,
+.background-settings {
+    padding: 10px 0;
 }
 
 .background-options {
-    margin: 15px 0;
+    display: none;
+    margin: 20px 0;
+}
+
+.background-options.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .gradient-grid {
@@ -595,12 +842,18 @@ body {
     border-radius: 8px;
     cursor: pointer;
     border: 2px solid transparent;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
 }
 
 .gradient-option.active {
     border-color: var(--primary-color);
     transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.gradient-option:hover:not(.active) {
+    border-color: var(--text-secondary);
+    transform: scale(1.02);
 }
 
 .color-picker {
@@ -609,6 +862,7 @@ body {
     border: none;
     border-radius: 8px;
     cursor: pointer;
+    margin: 15px 0;
 }
 
 .gif-previews {
@@ -625,7 +879,7 @@ body {
     background-size: cover;
     background-position: center;
     border: 2px solid transparent;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
 }
 
 .gif-option:hover {
@@ -633,28 +887,49 @@ body {
     transform: scale(1.05);
 }
 
-/* Прозрачность окон */
-.chats-panel, .messenger-container {
-    transition: opacity 0.3s ease;
+.image-preview {
+    margin-top: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+    max-height: 200px;
+    display: none;
 }
 
-/* Анимации */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.modal-content {
-    animation: fadeIn 0.3s ease;
+.image-preview img {
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
+    .app-container {
+        height: 100vh;
+        padding: 0;
+    }
+    
+    .messenger-wrapper {
+        flex-direction: column;
+        border-radius: 0;
+    }
+    
+    .chats-panel {
+        width: 100%;
+        height: 40%;
+        border-radius: 0;
+    }
+    
+    .messenger-container {
+        height: 60%;
+        border-radius: 0;
+    }
+    
     .profile-settings {
         flex-direction: column;
     }
     
-    .gradient-grid {
+    .gradient-grid,
+    .gif-previews {
         grid-template-columns: repeat(2, 1fr);
     }
     
@@ -662,4 +937,31 @@ body {
         width: 95%;
         margin: 10px;
     }
+    
+    .settings-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .features-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Скроллбар */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
