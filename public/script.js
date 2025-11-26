@@ -580,26 +580,6 @@ class Messenger {
     }
 
     // ==================== ГРУППЫ ====================
-    showGroupModal() {
-        document.getElementById('group-modal').classList.add('active');
-        document.getElementById('group-name').value = '';
-        document.getElementById('group-user-search').value = '';
-        document.getElementById('group-search-results').innerHTML = '';
-        this.selectedUsers = [];
-        this.renderSelectedUsers();
-    }
-
-    hideGroupModal() {
-        document.getElementById('group-modal').classList.remove('active');
-    }
-
-    handleGroupUserSearch(query) {
-        clearTimeout(this.searchTimeout);
-        this.searchTimeout = setTimeout(() => {
-            this.searchUsersForGroup(query);
-        }, 300);
-    }
-
     async searchUsersForGroup(query) {
         const resultsContainer = document.getElementById('group-search-results');
         
@@ -624,7 +604,7 @@ class Messenger {
             resultsContainer.innerHTML = `
                 <div class="no-results">
                     <div class="no-results-icon">❌</div>
-                    <p>Ошибка поиска</p>
+                    <p>Ошибка поиска: ${error.message}</p>
                 </div>
             `;
         }
@@ -655,6 +635,8 @@ class Messenger {
             userElement.className = 'user-result';
             
             const avatarStyle = user.avatar ? `style="background-image: url(${user.avatar})"` : '';
+            const allowGroupInvites = user.allow_group_invites !== false;
+            
             userElement.innerHTML = `
                 <div class="user-avatar" ${avatarStyle}>
                     ${user.avatar ? '' : user.name.charAt(0)}
@@ -662,90 +644,23 @@ class Messenger {
                 <div class="user-info">
                     <div class="user-name">${user.name}</div>
                     <div class="user-username">@${user.username}</div>
+                    <div class="user-status">${allowGroupInvites ? '✓ Можно добавлять в группы' : '✗ Запрещено добавлять в группы'}</div>
                 </div>
             `;
             
-            userElement.addEventListener('click', () => this.addUserToGroup(user));
+            if (allowGroupInvites) {
+                userElement.addEventListener('click', () => this.addUserToGroup(user));
+            } else {
+                userElement.style.opacity = '0.6';
+                userElement.style.cursor = 'not-allowed';
+                userElement.title = 'Этот пользователь запретил добавлять себя в группы';
+            }
+            
             resultsContainer.appendChild(userElement);
         });
     }
 
-    addUserToGroup(user) {
-        if (!this.selectedUsers.some(u => u.id === user.id)) {
-            this.selectedUsers.push(user);
-            this.renderSelectedUsers();
-            document.getElementById('group-user-search').value = '';
-            document.getElementById('group-search-results').innerHTML = '';
-            this.playSound(this.clickSound);
-        }
-    }
-
-    removeUserFromGroup(userId) {
-        this.selectedUsers = this.selectedUsers.filter(user => user.id !== userId);
-        this.renderSelectedUsers();
-        this.playSound(this.clickSound);
-    }
-
-    renderSelectedUsers() {
-        const container = document.getElementById('selected-users');
-        container.innerHTML = '';
-
-        this.selectedUsers.forEach(user => {
-            const userElement = document.createElement('div');
-            userElement.className = 'selected-user';
-            userElement.innerHTML = `
-                ${user.name}
-                <button class="remove-user" onclick="messenger.removeUserFromGroup(${user.id})">×</button>
-            `;
-            container.appendChild(userElement);
-        });
-    }
-
-    async createGroup() {
-        const groupName = document.getElementById('group-name').value.trim();
-        const userIds = this.selectedUsers.map(user => user.id);
-
-        if (!groupName) {
-            alert('Введите название группы');
-            return;
-        }
-
-        if (userIds.length === 0) {
-            alert('Добавьте хотя бы одного участника');
-            return;
-        }
-
-        try {
-            const response = await this.apiCall('/api/groups', {
-                method: 'POST',
-                body: JSON.stringify({
-                    groupName: groupName,
-                    userIds: userIds
-                })
-            });
-
-            if (response) {
-                const result = await response.json();
-                alert('Группа успешно создана!');
-                this.hideGroupModal();
-                await this.loadChats();
-                this.playSound(this.messageSound);
-            }
-        } catch (error) {
-            console.error('Ошибка создания группы:', error);
-            const errorData = await error.json();
-            alert(`Ошибка создания группы: ${errorData.error}`);
-        }
-    }
-
-    // ==================== ПОИСК ПОЛЬЗОВАТЕЛЕЙ ====================
-    handleSearchInput(query) {
-        clearTimeout(this.searchTimeout);
-        this.searchTimeout = setTimeout(() => {
-            this.searchUsers(query);
-        }, 300);
-    }
-
+// ==================== ПОИСК ПОЛЬЗОВАТЕЛЕЙ ====================
     async searchUsers(query) {
         const resultsContainer = document.getElementById('user-search-results');
         
@@ -770,7 +685,7 @@ class Messenger {
             resultsContainer.innerHTML = `
                 <div class="no-results">
                     <div class="no-results-icon">❌</div>
-                    <p>Ошибка поиска</p>
+                    <p>Ошибка поиска: ${error.message}</p>
                 </div>
             `;
         }
@@ -787,6 +702,7 @@ class Messenger {
                 <div class="no-results">
                     <div class="no-results-icon">👥</div>
                     <p>Пользователи не найдены</p>
+                    <p>Попробуйте изменить запрос</p>
                 </div>
             `;
             return;
@@ -805,67 +721,13 @@ class Messenger {
                 <div class="user-info">
                     <div class="user-name">${user.name}</div>
                     <div class="user-username">@${user.username}</div>
+                    <div class="user-status">${user.status || 'в сети'}</div>
                 </div>
             `;
             
             userElement.addEventListener('click', () => this.startChat(user));
             resultsContainer.appendChild(userElement);
         });
-    }
-
-    async startChat(user) {
-        try {
-            const response = await this.apiCall('/api/chats', {
-                method: 'POST',
-                body: JSON.stringify({ userId: user.id })
-            });
-
-            if (response) {
-                const result = await response.json();
-                
-                if (result.exists) {
-                    // Чат уже существует, просто выбираем его
-                    const existingChat = this.chats.find(chat => chat.id === result.id);
-                    if (existingChat) {
-                        this.selectChat(existingChat);
-                    }
-                } else {
-                    // Новый чат создан
-                    await this.loadChats();
-                    
-                    // Находим новый чат и выбираем его
-                    const newChat = this.chats.find(chat => 
-                        chat.username === user.username || chat.other_user_id === user.id
-                    );
-                    
-                    if (newChat) {
-                        this.selectChat(newChat);
-                    }
-                }
-                
-                this.hideSearchModal();
-                this.playSound(this.clickSound);
-            }
-        } catch (error) {
-            console.error('Ошибка создания чата:', error);
-            alert('Ошибка создания чата');
-        }
-    }
-
-    showSearchModal() {
-        document.getElementById('search-modal').classList.add('active');
-        document.getElementById('user-search-input').value = '';
-        document.getElementById('user-search-input').focus();
-        document.getElementById('user-search-results').innerHTML = `
-            <div class="no-results">
-                <div class="no-results-icon">🔍</div>
-                <p>Начните вводить запрос для поиска</p>
-            </div>
-        `;
-    }
-
-    hideSearchModal() {
-        document.getElementById('search-modal').classList.remove('active');
     }
 
     // ==================== НАСТРОЙКИ ====================
@@ -1172,32 +1034,6 @@ class Messenger {
     }
 
     // ==================== ПРОФИЛЬ ====================
-    uploadAvatar() {
-        document.getElementById('avatar-upload').click();
-    }
-
-    handleAvatarUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        // Проверяем тип файла
-        if (!file.type.startsWith('image/')) {
-            alert('Пожалуйста, выберите изображение');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const avatarPreview = document.getElementById('avatar-preview');
-            avatarPreview.style.backgroundImage = `url(${e.target.result})`;
-            avatarPreview.innerHTML = '';
-            
-            // Сохраняем данные аватарки для отправки на сервер
-            this.avatarData = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-
     async saveProfile() {
         const name = document.getElementById('profile-name').value.trim();
         const status = document.getElementById('profile-status').value.trim();
@@ -1238,7 +1074,7 @@ class Messenger {
             }
         } catch (error) {
             console.error('Ошибка сохранения профиля:', error);
-            alert('Ошибка сохранения профиля');
+            alert(`Ошибка сохранения профиля: ${error.message}`);
         }
     }
 
@@ -1277,10 +1113,10 @@ class Messenger {
             }
         } catch (error) {
             console.error('Ошибка смены username:', error);
-            const errorData = await error.json();
-            alert(`${errorData.error}`);
+            alert(`Ошибка смены username: ${error.message}`);
         }
     }
+
 
     // ==================== ТЕМА ====================
     selectTheme(element) {
@@ -1467,36 +1303,6 @@ class Messenger {
     }
 
     // ==================== СИСТЕМНЫЕ ФУНКЦИИ ====================
-    async saveSettings() {
-        try {
-            await this.apiCall('/api/settings', {
-                method: 'POST',
-                body: JSON.stringify(this.userSettings)
-            });
-        } catch (error) {
-            console.error('Ошибка сохранения настроек:', error);
-        }
-    }
-
-    logout() {
-        if (confirm('Вы уверены, что хотите выйти?')) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            this.currentUser = null;
-            this.token = null;
-            this.activeChatId = null;
-            this.chats = [];
-            this.userSettings = {};
-
-            document.getElementById('app-container').style.display = 'none';
-            document.getElementById('auth-container').style.display = 'block';
-            document.getElementById('login-form').reset();
-            document.getElementById('register-form').reset();
-            document.getElementById('login-form').style.display = 'block';
-            document.getElementById('register-form').style.display = 'none';
-        }
-    }
-
     async apiCall(url, options = {}) {
         if (!this.token) {
             this.logout();
@@ -1524,8 +1330,14 @@ class Messenger {
             }
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Ошибка сервера');
+                let errorMessage = 'Ошибка сервера';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    errorMessage = await response.text() || errorMessage;
+                }
+                throw new Error(errorMessage);
             }
 
             return response;
