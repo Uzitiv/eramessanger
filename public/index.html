@@ -2,15 +2,15 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Мессенджер</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Плавающий мессенджер</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-gradient-1 theme-dark">
     <!-- Экран авторизации -->
     <div id="auth-container" class="auth-container">
         <div class="auth-box">
-            <div class="auth-title">Мессенджер</div>
+            <div class="auth-title">Плавающий мессенджер</div>
             
             <form id="login-form" class="auth-form">
                 <h3>Вход в аккаунт</h3>
@@ -52,8 +52,8 @@
                 <div class="chats-list" id="chats-list">
                     <div class="no-chats" id="no-chats">
                         <div class="no-chats-icon">💬</div>
-                        <p>Нет активных чатов</p>
-                        <p>Начните общение с другими пользователями</p>
+                        <p>Чатов пока нет</p>
+                        <p>Найдите пользователей чтобы начать общение</p>
                         <button class="find-users-btn" id="find-users-btn">Найти пользователей</button>
                     </div>
                 </div>
@@ -67,9 +67,7 @@
                         <div class="current-chat-status" id="current-chat-status">чтобы начать общение</div>
                     </div>
                     <div class="header-controls">
-                        <button class="control-btn logout-btn" id="logout-btn" title="Выйти">
-                            <span class="btn-text">Выйти</span>
-                        </button>
+                        <button class="control-btn logout-btn" id="logout-btn" title="Выйти">Выйти</button>
                     </div>
                 </div>
                 
@@ -104,12 +102,8 @@
 
                 <!-- Нижняя панель управления -->
                 <div class="bottom-panel">
-                    <button class="bottom-btn" id="search-bottom-btn">
-                        <span class="btn-text">Поиск</span>
-                    </button>
-                    <button class="bottom-btn" id="settings-bottom-btn">
-                        <span class="btn-text">Настройки</span>
-                    </button>
+                    <button class="bottom-btn" id="search-bottom-btn">Поиск</button>
+                    <button class="bottom-btn" id="settings-bottom-btn">Настройки</button>
                 </div>
             </div>
         </div>
@@ -411,6 +405,17 @@
             </div>
         </div>
     </div>
+
+    <!-- Аудио для звуков -->
+    <audio id="hover-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+    </audio>
+    <audio id="click-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+    </audio>
+    <audio id="message-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+    </audio>
 
     <script src="script.js"></script>
 </body>
