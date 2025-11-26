@@ -45,8 +45,8 @@
                 <div class="chats-header">
                     <div class="chats-title">Мои чаты</div>
                     <div class="header-controls">
-                        <button class="control-btn" id="new-group-btn" title="Создать группу">👥 Группа</button>
-                        <button class="control-btn" id="new-chat-btn" title="Найти пользователя">🔍 Поиск</button>
+                        <button class="control-btn" id="new-group-btn" title="Создать группу">Группа</button>
+                        <button class="control-btn" id="new-chat-btn" title="Найти пользователя">Поиск</button>
                     </div>
                 </div>
                 <div class="chats-list" id="chats-list">
@@ -65,9 +65,6 @@
                     <div class="current-chat-info">
                         <div class="current-chat-name" id="current-chat-name">Выберите чат</div>
                         <div class="current-chat-status" id="current-chat-status">чтобы начать общение</div>
-                    </div>
-                    <div class="header-controls">
-                        <button class="control-btn" id="settings-btn" title="Настройки">⚙️</button>
                     </div>
                 </div>
                 
@@ -105,47 +102,41 @@
             <div class="right-panel">
                 <div class="panel-section">
                     <h4>Управление</h4>
-                    <button class="panel-btn" id="right-panel-new-chat">
-                        <span class="btn-icon">💬</span>
-                        <span class="btn-text">Новый чат</span>
+                    <button class="panel-btn" id="panel-new-chat">
+                        <span class="panel-icon">💬</span>
+                        <span class="panel-text">Новый чат</span>
                     </button>
-                    <button class="panel-btn" id="right-panel-new-group">
-                        <span class="btn-icon">👥</span>
-                        <span class="btn-text">Новая группа</span>
+                    <button class="panel-btn" id="panel-new-group">
+                        <span class="panel-icon">👥</span>
+                        <span class="panel-text">Создать группу</span>
                     </button>
-                    <button class="panel-btn" id="right-panel-settings">
-                        <span class="btn-icon">⚙️</span>
-                        <span class="btn-text">Настройки</span>
-                    </button>
-                    <button class="panel-btn logout-btn" id="right-panel-logout">
-                        <span class="btn-icon">🚪</span>
-                        <span class="btn-text">Выйти</span>
+                    <button class="panel-btn" id="panel-find-users">
+                        <span class="panel-icon">🔍</span>
+                        <span class="panel-text">Найти людей</span>
                     </button>
                 </div>
                 
                 <div class="panel-section">
-                    <h4>Информация</h4>
-                    <div class="user-info-panel">
-                        <div class="panel-avatar" id="panel-avatar">
-                            <div class="avatar-placeholder">👤</div>
-                        </div>
-                        <div class="panel-user-info">
-                            <div class="panel-user-name" id="panel-user-name">Гость</div>
-                            <div class="panel-user-status" id="panel-user-status">Не авторизован</div>
-                        </div>
-                    </div>
+                    <h4>Аккаунт</h4>
+                    <button class="panel-btn" id="panel-settings">
+                        <span class="panel-icon">⚙️</span>
+                        <span class="panel-text">Настройки</span>
+                    </button>
+                    <button class="panel-btn" id="panel-profile">
+                        <span class="panel-icon">👤</span>
+                        <span class="panel-text">Мой профиль</span>
+                    </button>
+                    <button class="panel-btn logout-btn" id="panel-logout">
+                        <span class="panel-icon">🚪</span>
+                        <span class="panel-text">Выйти</span>
+                    </button>
                 </div>
-
+                
                 <div class="panel-section">
-                    <h4>Быстрые действия</h4>
-                    <button class="panel-btn" id="right-panel-theme">
-                        <span class="btn-icon">🎨</span>
-                        <span class="btn-text">Сменить тему</span>
-                    </button>
-                    <button class="panel-btn" id="right-panel-profile">
-                        <span class="btn-icon">👤</span>
-                        <span class="btn-text">Профиль</span>
-                    </button>
+                    <h4>Текущий чат</h4>
+                    <div class="current-chat-info" id="panel-chat-info">
+                        <p>Чат не выбран</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -290,34 +281,6 @@
                                     <div class="theme-preview orange-theme"></div>
                                     <span>Оранжевая</span>
                                 </div>
-                                <div class="theme-option" data-theme="pink">
-                                    <div class="theme-preview pink-theme"></div>
-                                    <span>Розовая</span>
-                                </div>
-                                <div class="theme-option" data-theme="red">
-                                    <div class="theme-preview red-theme"></div>
-                                    <span>Красная</span>
-                                </div>
-                                <div class="theme-option" data-theme="teal">
-                                    <div class="theme-preview teal-theme"></div>
-                                    <span>Бирюзовая</span>
-                                </div>
-                                <div class="theme-option" data-theme="cyan">
-                                    <div class="theme-preview cyan-theme"></div>
-                                    <span>Голубая</span>
-                                </div>
-                                <div class="theme-option" data-theme="indigo">
-                                    <div class="theme-preview indigo-theme"></div>
-                                    <span>Индиго</span>
-                                </div>
-                                <div class="theme-option" data-theme="brown">
-                                    <div class="theme-preview brown-theme"></div>
-                                    <span>Коричневая</span>
-                                </div>
-                                <div class="theme-option" data-theme="deep-purple">
-                                    <div class="theme-preview deep-purple-theme"></div>
-                                    <span>Темно-фиолетовая</span>
-                                </div>
                             </div>
                         </div>
                         
@@ -451,7 +414,7 @@
                         <div class="background-options" id="gif-options">
                             <label>Выберите GIF фон:</label>
                             <div class="gif-previews">
-                                <div class="gif-option active" data-gif="https://media.giphy.com/media/3o7aD2sa2K2V4xJxAY/giphy.gif" style="background-image: url('https://media.giphy.com/media/3o7aD2sa2K2V4xJxAY/giphy.gif')"></div>
+                                <div class="gif-option" data-gif="https://media.giphy.com/media/3o7aD2sa2K2V4xJxAY/giphy.gif" style="background-image: url('https://media.giphy.com/media/3o7aD2sa2K2V4xJxAY/giphy.gif')"></div>
                                 <div class="gif-option" data-gif="https://media.giphy.com/media/l0HU7JI1m1eEwz7K8/giphy.gif" style="background-image: url('https://media.giphy.com/media/l0HU7JI1m1eEwz7K8/giphy.gif')"></div>
                                 <div class="gif-option" data-gif="https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif" style="background-image: url('https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif')"></div>
                                 <div class="gif-option" data-gif="https://media.giphy.com/media/3o72FfM5HJydzafgUE/giphy.gif" style="background-image: url('https://media.giphy.com/media/3o72FfM5HJydzafgUE/giphy.gif')"></div>
@@ -459,7 +422,6 @@
                             <div class="form-group">
                                 <label>Или введите URL GIF:</label>
                                 <input type="url" id="gif-url" class="settings-input" placeholder="https://example.com/background.gif">
-                                <button class="upload-btn" id="test-gif-btn">Проверить GIF</button>
                             </div>
                         </div>
 
