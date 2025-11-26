@@ -97,7 +97,16 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
-
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        }
+        if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
+    }
+}));
 // Регистрация
 app.post('/api/register', async (req, res) => {
   const { username, password, name } = req.body;
