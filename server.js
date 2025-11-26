@@ -10,9 +10,22 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-here';
 
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        }
+        if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
+    }
+}));
 
 // Создаем папку для базы данных если её нет
 if (!fs.existsSync('data')) {
@@ -97,16 +110,7 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
-app.use(express.static(path.join(__dirname, 'public'), {
-    setHeaders: (res, path) => {
-        if (path.endsWith('.css')) {
-            res.setHeader('Content-Type', 'text/css');
-        }
-        if (path.endsWith('.js')) {
-            res.setHeader('Content-Type', 'application/javascript');
-        }
-    }
-}));
+
 // Регистрация
 app.post('/api/register', async (req, res) => {
   const { username, password, name } = req.body;
@@ -369,7 +373,7 @@ app.post('/api/chats/:chatId/messages', authenticateToken, (req, res) => {
         }
 
         // Обновляем последнее сообщение в чате
-        const lastMessage = attachment ? '📎 Файл' : (text ? text.trim() : '');
+        const lastMessage = attachment ? 'Файл' : (text ? text.trim() : '');
         db.run(`UPDATE chats SET last_message = ?, last_message_time = CURRENT_TIMESTAMP WHERE id = ?`, 
           [lastMessage, chatId]);
 
