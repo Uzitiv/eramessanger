@@ -44,7 +44,34 @@ class Messenger {
             sound.play().catch(e => console.log('Audio play failed:', e));
         }
     }
+async apiCall(url, options = {}) {
+    const config = {
+        headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json',
+            ...options.headers
+        },
+        ...options
+    };
 
+    if (config.body && typeof config.body === 'object') {
+        config.body = JSON.stringify(config.body);
+    }
+
+    try {
+        const response = await fetch(url, config);
+        
+        if (response.status === 401) {
+            this.logout();
+            return null;
+        }
+        
+        return response;
+    } catch (error) {
+        console.error('API call failed:', error);
+        throw error;
+    }
+}
     bindEvents() {
         console.log('Привязка событий...');
         
