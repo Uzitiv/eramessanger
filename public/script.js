@@ -25,23 +25,24 @@ class Messenger {
         this.createAudioElements();
         this.setupMobileView();
         
-        // Добавляем проверку кнопок после инициализации
         setTimeout(() => this.checkButtons(), 100);
     }
-checkButtons() {
+
+    checkButtons() {
         console.log('Проверка кнопок:');
         console.log('new-chat-btn:', document.getElementById('new-chat-btn'));
         console.log('find-users-btn:', document.getElementById('find-users-btn'));
         console.log('search-bottom-btn:', document.getElementById('search-bottom-btn'));
     }
+
     setupMobileView() {
         if (this.isMobile) {
             document.body.classList.add('mobile-view');
-            document.querySelector('.bottom-panel').style.display = 'none';
+            const bottomPanel = document.querySelector('.bottom-panel');
+            if (bottomPanel) bottomPanel.style.display = 'none';
         }
     }
- bindEvents() {
-        console.log('Привязка событий...');
+
     createAudioElements() {
         this.hoverSound = document.getElementById('hover-sound');
         this.clickSound = document.getElementById('click-sound');
@@ -56,6 +57,8 @@ checkButtons() {
     }
 
     bindEvents() {
+        console.log('Привязка событий...');
+        
         // Авторизация
         document.getElementById('login-form').addEventListener('submit', (e) => this.handleLogin(e));
         document.getElementById('register-form').addEventListener('submit', (e) => this.handleRegister(e));
@@ -67,58 +70,14 @@ checkButtons() {
             e.preventDefault();
             this.showLoginForm();
         });
-        // ОСНОВНЫЕ КНОПКИ ПОИСКА - ПРОСТАЯ ПРИВЯЗКА
-        const newChatBtn = document.getElementById('new-chat-btn');
-        if (newChatBtn) {
-            console.log('Привязываем new-chat-btn');
-            newChatBtn.addEventListener('click', () => {
-                console.log('Кнопка new-chat-btn нажата');
-                this.showSearchModal();
-            });
-        }
-
-        const findUsersBtn = document.getElementById('find-users-btn');
-        if (findUsersBtn) {
-            console.log('Привязываем find-users-btn');
-            findUsersBtn.addEventListener('click', () => {
-                console.log('Кнопка find-users-btn нажата');
-                this.showSearchModal();
-            });
-        }
-
-        const searchBottomBtn = document.getElementById('search-bottom-btn');
-        if (searchBottomBtn) {
-            console.log('Привязываем search-bottom-btn');
-            searchBottomBtn.addEventListener('click', () => {
-                console.log('Кнопка search-bottom-btn нажата');
-                this.showSearchModal();
-            });
-        }
-        // Остальные кнопки
-        this.bindButton('new-group-btn', () => this.showGroupModal());
-        this.bindButton('close-search-modal', () => this.hideSearchModal());
-        this.bindButton('send-btn', () => this.sendMessage());
-        this.bindButton('settings-bottom-btn', () => this.showSettingsModal());
-        this.bindButton('logout-btn', () => this.logout());
-        this.bindButton('attach-btn', () => this.uploadFile());
-        this.bindButton('close-settings-modal', () => this.hideSettingsModal());
-        this.bindButton('close-group-modal', () => this.hideGroupModal());
-        this.bindButton('create-group-btn', () => this.createGroup());
-        this.bindButton('upload-avatar-btn', () => this.uploadAvatar());
-        this.bindButton('save-profile-btn', () => this.saveProfile());
-        this.bindButton('change-username-btn', () => this.changeUsername());
-        this.bindButton('save-theme-btn', () => this.saveThemeSettings());
-        this.bindButton('save-effects-btn', () => this.saveEffectsSettings());
-        this.bindButton('save-background-btn', () => this.saveBackgroundSettings());
-        this.bindButton('upload-background-btn', () => this.uploadBackground());
 
         // Основные кнопки
         this.bindButton('new-chat-btn', () => this.showSearchModal());
-        this.bindButton('new-group-btn', () => this.showGroupModal());
         this.bindButton('find-users-btn', () => this.showSearchModal());
+        this.bindButton('search-bottom-btn', () => this.showSearchModal());
+        this.bindButton('new-group-btn', () => this.showGroupModal());
         this.bindButton('close-search-modal', () => this.hideSearchModal());
         this.bindButton('send-btn', () => this.sendMessage());
-        this.bindButton('search-bottom-btn', () => this.showSearchModal());
         this.bindButton('settings-bottom-btn', () => this.showSettingsModal());
         this.bindButton('logout-btn', () => this.logout());
         this.bindButton('attach-btn', () => this.uploadFile());
@@ -133,7 +92,13 @@ checkButtons() {
         this.bindButton('save-background-btn', () => this.saveBackgroundSettings());
         this.bindButton('upload-background-btn', () => this.uploadBackground());
 
-               // Поиск
+        // Кнопки правой панели
+        this.bindButton('right-panel-settings', () => this.showSettingsModal());
+        this.bindButton('right-panel-logout', () => this.logout());
+        this.bindButton('right-panel-new-chat', () => this.showSearchModal());
+        this.bindButton('right-panel-new-group', () => this.showGroupModal());
+
+        // Поиск
         document.getElementById('user-search-input').addEventListener('input', (e) => this.handleSearchInput(e.target.value));
         document.getElementById('group-user-search').addEventListener('input', (e) => this.handleGroupUserSearch(e.target.value));
         
@@ -141,10 +106,12 @@ checkButtons() {
         document.getElementById('message-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.sendMessage();
         });
+
         // Файлы
         document.getElementById('file-upload').addEventListener('change', (e) => this.handleFileUpload(e));
         document.getElementById('avatar-upload').addEventListener('change', (e) => this.handleAvatarUpload(e));
         document.getElementById('background-upload').addEventListener('change', (e) => this.handleBackgroundUpload(e));
+
         // Настройки - табы
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => this.switchSettingsTab(e.target.dataset.tab));
@@ -166,7 +133,6 @@ checkButtons() {
             radio.addEventListener('change', (e) => this.selectGlowPosition(e.target.value));
         });
 
-
         // Фон
         document.getElementById('background-type').addEventListener('change', (e) => this.switchBackgroundType(e.target.value));
         document.querySelectorAll('.gradient-option').forEach(option => {
@@ -184,7 +150,7 @@ checkButtons() {
         this.addHoverSounds();
     }
 
-  bindButton(id, handler) {
+    bindButton(id, handler) {
         const element = document.getElementById(id);
         if (element) {
             element.addEventListener('click', handler);
@@ -193,6 +159,7 @@ checkButtons() {
             console.warn(`Элемент с id "${id}" не найден`);
         }
     }
+
     handleResize() {
         this.isMobile = this.checkMobile();
         this.setupMobileView();
@@ -240,6 +207,7 @@ checkButtons() {
                 this.showError('login-error', data.error);
             }
         } catch (error) {
+            console.error('Login error:', error);
             this.showError('login-error', 'Ошибка подключения к серверу');
         }
     }
@@ -283,6 +251,7 @@ checkButtons() {
                 this.showError('register-error', data.error);
             }
         } catch (error) {
+            console.error('Register error:', error);
             this.showError('register-error', 'Ошибка подключения к серверу');
         }
     }
@@ -315,6 +284,7 @@ checkButtons() {
                 this.loadChats();
                 this.loadUserSettings();
             } catch (e) {
+                console.error('Auth error:', e);
                 this.logout();
             }
         }
@@ -351,7 +321,7 @@ checkButtons() {
                     <span>Настройки</span>
                 </button>
             `;
-            document.querySelector('.messenger-container').appendChild(mobileNav);
+            document.querySelector('.messenger-wrapper').appendChild(mobileNav);
 
             mobileNav.querySelectorAll('.mobile-nav-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -368,6 +338,7 @@ checkButtons() {
     handleMobileNavAction(action) {
         switch (action) {
             case 'chats':
+                this.showChatsList();
                 break;
             case 'search':
                 this.showSearchModal();
@@ -456,7 +427,7 @@ checkButtons() {
         const chatName = document.getElementById('current-chat-name');
         const chatStatus = document.getElementById('current-chat-status');
         if (chatName) chatName.textContent = chat.name;
-        if (chatStatus) chatStatus.textContent = chat.status;
+        if (chatStatus) chatStatus.textContent = chat.is_group ? 'Групповой чат' : 'в сети';
         
         // Активируем поле ввода
         const messageInput = document.getElementById('message-input');
@@ -483,8 +454,10 @@ checkButtons() {
         if (this.isMobile) {
             const chatsPanel = document.querySelector('.chats-panel');
             const messengerContainer = document.querySelector('.messenger-container');
+            const rightPanel = document.querySelector('.right-panel');
             if (chatsPanel) chatsPanel.style.display = 'none';
             if (messengerContainer) messengerContainer.style.display = 'flex';
+            if (rightPanel) rightPanel.style.display = 'none';
         }
     }
 
@@ -492,8 +465,10 @@ checkButtons() {
         if (this.isMobile) {
             const chatsPanel = document.querySelector('.chats-panel');
             const messengerContainer = document.querySelector('.messenger-container');
+            const rightPanel = document.querySelector('.right-panel');
             if (chatsPanel) chatsPanel.style.display = 'flex';
             if (messengerContainer) messengerContainer.style.display = 'none';
+            if (rightPanel) rightPanel.style.display = 'none';
         }
     }
 
@@ -803,92 +778,120 @@ checkButtons() {
         }
     }
 
-// ==================== ПОИСК ПОЛЬЗОВАТЕЛЕЙ ====================
-async searchUsers(query) {
-    const resultsContainer = document.getElementById('user-search-results');
-    if (!resultsContainer) return;
-    
-    console.log('Поиск:', query);
-
-    if (!query || query.trim().length < 2) {
-        resultsContainer.innerHTML = `
-            <div class="no-results">
-                <div class="no-results-icon">🔍</div>
-                <p>Введите минимум 2 символа для поиска</p>
-            </div>
-        `;
-        return;
+    // ==================== ПОИСК ПОЛЬЗОВАТЕЛЕЙ ====================
+    handleSearchInput(query) {
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(() => {
+            this.searchUsers(query);
+        }, 300);
     }
 
-    try {
-        const response = await fetch(`/api/users/search?query=${encodeURIComponent(query.trim())}`, {
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            }
-        });
+    async searchUsers(query) {
+        const resultsContainer = document.getElementById('user-search-results');
+        if (!resultsContainer) return;
+        
+        console.log('Поиск:', query);
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+        if (!query || query.trim().length < 2) {
+            resultsContainer.innerHTML = `
+                <div class="no-results">
+                    <div class="no-results-icon">🔍</div>
+                    <p>Введите минимум 2 символа для поиска</p>
+                </div>
+            `;
+            return;
         }
 
-        const users = await response.json();
-        console.log('Результаты поиска:', users);
-        this.renderSearchResults(users);
-    } catch (error) {
-        console.error('Ошибка поиска:', error);
-        resultsContainer.innerHTML = `
-            <div class="no-results">
-                <div class="no-results-icon">❌</div>
-                <p>Ошибка поиска: ${error.message}</p>
-            </div>
-        `;
-    }
-}
+        try {
+            const response = await this.apiCall(`/api/users/search?query=${encodeURIComponent(query.trim())}`);
+            if (!response) return;
 
-// Для групп тоже исправим
-async searchUsersForGroup(query) {
-    const resultsContainer = document.getElementById('group-search-results');
-    if (!resultsContainer) return;
-    
-    console.log('Поиск для группы:', query);
-
-    if (!query || query.trim().length < 2) {
-        resultsContainer.innerHTML = `
-            <div class="no-results">
-                <div class="no-results-icon">🔍</div>
-                <p>Введите минимум 2 символа для поиска</p>
-            </div>
-        `;
-        return;
+            const users = await response.json();
+            console.log('Результаты поиска:', users);
+            this.renderSearchResults(users);
+        } catch (error) {
+            console.error('Ошибка поиска:', error);
+            resultsContainer.innerHTML = `
+                <div class="no-results">
+                    <div class="no-results-icon">❌</div>
+                    <p>Ошибка поиска: ${error.message}</p>
+                </div>
+            `;
+        }
     }
 
-    try {
-        const response = await fetch(`/api/users/search?query=${encodeURIComponent(query.trim())}`, {
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            }
-        });
+    renderSearchResults(users) {
+        const resultsContainer = document.getElementById('user-search-results');
+        if (!resultsContainer) return;
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+        if (users.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="no-results">
+                    <div class="no-results-icon">👥</div>
+                    <p>Пользователи не найдены</p>
+                </div>
+            `;
+            return;
         }
 
-        const users = await response.json();
-        console.log('Результаты поиска для группы:', users);
-        this.renderGroupSearchResults(users);
-    } catch (error) {
-        console.error('Ошибка поиска:', error);
-        resultsContainer.innerHTML = `
-            <div class="no-results">
-                <div class="no-results-icon">❌</div>
-                <p>Ошибка поиска: ${error.message}</p>
-            </div>
-        `;
+        resultsContainer.innerHTML = '';
+        users.forEach(user => {
+            const userElement = document.createElement('div');
+            userElement.className = 'user-result';
+            
+            const avatarStyle = user.avatar ? `style="background-image: url(${user.avatar})"` : '';
+            userElement.innerHTML = `
+                <div class="user-avatar" ${avatarStyle}>
+                    ${user.avatar ? '' : user.name.charAt(0)}
+                </div>
+                <div class="user-info">
+                    <div class="user-name">${user.name}</div>
+                    <div class="user-username">@${user.username}</div>
+                </div>
+            `;
+            
+            userElement.addEventListener('click', async () => {
+                await this.startChatWithUser(user);
+            });
+            resultsContainer.appendChild(userElement);
+        });
     }
-}
-        // ==================== ПОИСК ====================
+
+    async startChatWithUser(user) {
+        try {
+            const response = await this.apiCall('/api/chats', {
+                method: 'POST',
+                body: JSON.stringify({ userId: user.id })
+            });
+
+            if (response) {
+                const result = await response.json();
+                this.hideSearchModal();
+                
+                if (result.exists) {
+                    // Чат уже существует, выбираем его
+                    const existingChat = this.chats.find(chat => chat.id === result.id);
+                    if (existingChat) {
+                        await this.selectChat(existingChat);
+                    }
+                } else {
+                    // Новый чат создан, перезагружаем список
+                    await this.loadChats();
+                    // Находим и выбираем новый чат
+                    const newChat = this.chats.find(chat => chat.id === result.id);
+                    if (newChat) {
+                        await this.selectChat(newChat);
+                    }
+                }
+                this.playSound(this.clickSound);
+            }
+        } catch (error) {
+            console.error('Ошибка создания чата:', error);
+            alert('Ошибка создания чата');
+        }
+    }
+
+    // ==================== ПОИСК ====================
     showSearchModal() {
         console.log('showSearchModal вызван');
         const modal = document.getElementById('search-modal');
@@ -925,6 +928,7 @@ async searchUsersForGroup(query) {
             modal.classList.remove('active');
         }
     }
+
     // ==================== НАСТРОЙКИ ====================
     async loadUserSettings() {
         try {
@@ -936,6 +940,7 @@ async searchUsersForGroup(query) {
             }
         } catch (error) {
             console.error('Ошибка загрузки настроек:', error);
+            // Настройки по умолчанию
             this.userSettings = {
                 theme: 'dark',
                 windowOpacity: 0.9,
@@ -958,6 +963,7 @@ async searchUsersForGroup(query) {
     }
 
     applySettings() {
+        // Применяем все настройки
         if (this.userSettings.theme) {
             this.applyTheme(this.userSettings.theme);
         }
@@ -988,7 +994,7 @@ async searchUsersForGroup(query) {
             document.body.classList.remove('compact-mode');
         }
 
-        if (this.userSettings.roundedCorners) {
+        if (this.userSettings.roundedCorners !== false) {
             document.body.classList.add('rounded-corners');
             document.body.classList.remove('no-rounded-corners');
         } else {
@@ -1019,63 +1025,27 @@ async searchUsersForGroup(query) {
     applyWindowOpacity(opacity) {
         const chatsPanel = document.querySelector('.chats-panel');
         const messengerContainer = document.querySelector('.messenger-container');
+        const rightPanel = document.querySelector('.right-panel');
         
         if (chatsPanel) chatsPanel.style.opacity = opacity;
         if (messengerContainer) messengerContainer.style.opacity = opacity;
-        
-        const opacitySlider = document.getElementById('window-opacity');
-        const opacityValue = document.getElementById('opacity-value');
-        
-        if (opacitySlider) opacitySlider.value = opacity;
-        if (opacityValue) opacityValue.textContent = Math.round(opacity * 100) + '%';
+        if (rightPanel) rightPanel.style.opacity = opacity;
     }
 
     applyGlowColor(color) {
         document.documentElement.style.setProperty('--glow-color', color);
-        const customColor = document.getElementById('glow-color-custom');
-        if (customColor) customColor.value = color;
-        
-        document.querySelectorAll('.glow-color-option').forEach(option => {
-            option.classList.remove('active');
-        });
-        
-        const activeOption = document.querySelector(`.glow-color-option[data-color="${color}"]`);
-        if (activeOption) {
-            activeOption.classList.add('active');
-        }
     }
 
     applyGlowPosition(position) {
         document.documentElement.style.setProperty('--glow-position', position);
-        
-        const chatsPanel = document.querySelector('.chats-panel');
-        const messengerContainer = document.querySelector('.messenger-container');
-        
-        [chatsPanel, messengerContainer].forEach(panel => {
-            if (panel) {
-                panel.classList.remove('glow-back', 'glow-front');
-                panel.classList.add(`glow-${position}`);
-            }
-        });
-        
-        document.querySelectorAll('input[name="glow-position"]').forEach(radio => {
-            radio.checked = radio.value === position;
-        });
     }
 
     applyGlowIntensity(intensity) {
         document.documentElement.style.setProperty('--glow-intensity', intensity);
-        const intensitySlider = document.getElementById('glow-intensity');
-        const intensityValue = document.getElementById('glow-intensity-value');
-        
-        if (intensitySlider) intensitySlider.value = intensity;
-        if (intensityValue) intensityValue.textContent = Math.round(intensity * 100) + '%';
     }
 
     applyPanelSize(size) {
         document.documentElement.setAttribute('data-panel-size', size);
-        const panelSelect = document.getElementById('panel-size');
-        if (panelSelect) panelSelect.value = size;
     }
 
     applyBackground(background) {
@@ -1083,26 +1053,29 @@ async searchUsersForGroup(query) {
 
         const body = document.body;
         
+        // Удаляем все классы фона
+        body.className = body.className.replace(/(^|\s)bg-\S+/g, '');
+        
         switch (background.type) {
             case 'gradient':
                 body.style.background = background.value;
                 body.style.backgroundSize = 'cover';
-                body.className = body.className.replace(/(^|\s)bg-\S+/g, '') + ' bg-gradient-custom';
+                body.classList.add('bg-gradient-custom');
                 break;
             case 'solid':
                 body.style.background = background.value;
                 body.style.backgroundSize = 'cover';
-                body.className = body.className.replace(/(^|\s)bg-\S+/g, '') + ' bg-solid';
+                body.classList.add('bg-solid');
                 break;
             case 'gif':
                 body.style.background = `url(${background.value})`;
                 body.style.backgroundSize = 'cover';
-                body.className = body.className.replace(/(^|\s)bg-\S+/g, '') + ' bg-gif';
+                body.classList.add('bg-gif');
                 break;
             case 'image':
                 body.style.background = `url(${background.value})`;
                 body.style.backgroundSize = 'cover';
-                body.className = body.className.replace(/(^|\s)bg-\S+/g, '') + ' bg-image';
+                body.classList.add('bg-image');
                 break;
         }
     }
@@ -1195,24 +1168,6 @@ async searchUsersForGroup(query) {
             if (backgroundType) {
                 backgroundType.value = this.userSettings.background.type;
                 this.switchBackgroundType(this.userSettings.background.type);
-            }
-            
-            switch (this.userSettings.background.type) {
-                case 'gradient':
-                    const activeGradient = document.querySelector(`.gradient-option[data-gradient="${this.userSettings.background.value}"]`);
-                    if (activeGradient) {
-                        document.querySelectorAll('.gradient-option').forEach(opt => opt.classList.remove('active'));
-                        activeGradient.classList.add('active');
-                    }
-                    break;
-                case 'solid':
-                    const solidColor = document.getElementById('solid-color');
-                    if (solidColor) solidColor.value = this.userSettings.background.value;
-                    break;
-                case 'gif':
-                    const gifUrl = document.getElementById('gif-url');
-                    if (gifUrl) gifUrl.value = this.userSettings.background.value;
-                    break;
             }
         }
     }
@@ -1366,9 +1321,6 @@ async searchUsersForGroup(query) {
             option.classList.remove('active');
         });
         element.classList.add('active');
-        
-        const theme = element.dataset.theme;
-        this.applyTheme(theme);
     }
 
     async saveThemeSettings() {
@@ -1398,7 +1350,7 @@ async searchUsersForGroup(query) {
     updateOpacityPreview(value) {
         const opacityValue = document.getElementById('opacity-value');
         if (opacityValue) opacityValue.textContent = Math.round(value * 100) + '%';
-        this.applyWindowOpacity(value);
+        this.applyWindowOpacity(parseFloat(value));
     }
 
     selectGlowColor(element) {
@@ -1422,7 +1374,7 @@ async searchUsersForGroup(query) {
     updateGlowIntensityPreview(value) {
         const intensityValue = document.getElementById('glow-intensity-value');
         if (intensityValue) intensityValue.textContent = Math.round(value * 100) + '%';
-        this.applyGlowIntensity(value);
+        this.applyGlowIntensity(parseFloat(value));
     }
 
     async saveEffectsSettings() {
@@ -1432,17 +1384,11 @@ async searchUsersForGroup(query) {
         const fontSizeSelect = document.getElementById('font-size');
         const glowPositionRadio = document.querySelector('input[name="glow-position"]:checked');
 
-        const opacity = opacitySlider ? parseFloat(opacitySlider.value) : 0.9;
-        const glowColor = glowColorCustom ? glowColorCustom.value : '#007AFF';
-        const glowIntensity = glowIntensitySlider ? parseFloat(glowIntensitySlider.value) : 0.3;
-        const fontSize = fontSizeSelect ? fontSizeSelect.value : '14px';
-        const glowPosition = glowPositionRadio ? glowPositionRadio.value : 'back';
-
-        this.userSettings.windowOpacity = opacity;
-        this.userSettings.glowColor = glowColor;
-        this.userSettings.glowIntensity = glowIntensity;
-        this.userSettings.fontSize = fontSize;
-        this.userSettings.glowPosition = glowPosition;
+        this.userSettings.windowOpacity = opacitySlider ? parseFloat(opacitySlider.value) : 0.9;
+        this.userSettings.glowColor = glowColorCustom ? glowColorCustom.value : '#007AFF';
+        this.userSettings.glowIntensity = glowIntensitySlider ? parseFloat(glowIntensitySlider.value) : 0.3;
+        this.userSettings.fontSize = fontSizeSelect ? fontSizeSelect.value : '14px';
+        this.userSettings.glowPosition = glowPositionRadio ? glowPositionRadio.value : 'back';
 
         await this.saveSettings();
         this.applySettings();
@@ -1467,19 +1413,13 @@ async searchUsersForGroup(query) {
             opt.classList.remove('active');
         });
         element.classList.add('active');
-        
-        const gradient = element.dataset.gradient;
-        document.body.style.background = gradient;
-        document.body.style.backgroundSize = 'cover';
     }
 
     selectGif(element) {
-        const gifUrl = element.dataset.gif;
-        const gifUrlInput = document.getElementById('gif-url');
-        if (gifUrlInput) gifUrlInput.value = gifUrl;
-        
-        document.body.style.background = `url(${gifUrl})`;
-        document.body.style.backgroundSize = 'cover';
+        document.querySelectorAll('.gif-option').forEach(opt => {
+            opt.classList.remove('active');
+        });
+        element.classList.add('active');
     }
 
     previewSolidColor(color) {
@@ -1490,8 +1430,8 @@ async searchUsersForGroup(query) {
     async saveBackgroundSettings() {
         const backgroundType = document.getElementById('background-type');
         const type = backgroundType ? backgroundType.value : 'gradient';
+        
         let value = '';
-
         switch (type) {
             case 'gradient':
                 const activeGradient = document.querySelector('.gradient-option.active');
@@ -1502,10 +1442,10 @@ async searchUsersForGroup(query) {
                 value = solidColor ? solidColor.value : '#1a1a2e';
                 break;
             case 'gif':
-                const gifUrl = document.getElementById('gif-url');
-                value = gifUrl ? gifUrl.value.trim() : '';
+                const activeGif = document.querySelector('.gif-option.active');
+                value = activeGif ? activeGif.dataset.gif : '';
                 if (!value) {
-                    alert('Введите URL GIF или выберите из примеров');
+                    alert('Выберите GIF из примеров');
                     return;
                 }
                 break;
@@ -1546,15 +1486,10 @@ async searchUsersForGroup(query) {
         const reader = new FileReader();
         reader.onload = (e) => {
             this.backgroundImageData = e.target.result;
-            
-            const preview = document.getElementById('background-preview');
-            if (preview) {
-                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-                preview.style.display = 'block';
-            }
-            
-            document.body.style.background = `url(${e.target.result})`;
-            document.body.style.backgroundSize = 'cover';
+            this.applyBackground({
+                type: 'image',
+                value: this.backgroundImageData
+            });
         };
         reader.readAsDataURL(file);
     }
@@ -1616,7 +1551,14 @@ async searchUsersForGroup(query) {
         }
 
         try {
-            const response = await fetch(url, { ...defaultOptions, ...options });
+            const config = { ...defaultOptions, ...options };
+            
+            // Для GET запросов не добавляем body
+            if (config.method === 'GET' || !config.method) {
+                delete config.body;
+            }
+
+            const response = await fetch(url, config);
             
             if (response.status === 401) {
                 this.logout();
