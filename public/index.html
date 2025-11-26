@@ -20,13 +20,6 @@
                 <div class="auth-switch">
                     Нет аккаунта? <a href="#" id="show-register">Создать аккаунт</a>
                 </div>
-                <div class="demo-accounts">
-                    <p><strong>Тестовые аккаунты:</strong></p>
-                    <p>👤 user1 / password123 (Анна)</p>
-                    <p>👤 user2 / password123 (Иван)</p>
-                    <p>👤 user3 / password123 (Мария)</p>
-                    <p>👤 user4 / password123 (Алексей)</p>
-                </div>
                 <div class="auth-error" id="login-error"></div>
             </form>
 
@@ -51,7 +44,10 @@
             <div class="chats-panel">
                 <div class="chats-header">
                     <div class="chats-title">💭 Мои чаты</div>
-                    <button class="new-chat-btn" id="new-chat-btn" title="Найти пользователя">🔍</button>
+                    <div class="header-controls">
+                        <button class="control-btn" id="new-group-btn" title="Создать группу">👥</button>
+                        <button class="control-btn" id="new-chat-btn" title="Найти пользователя">🔍</button>
+                    </div>
                 </div>
                 <div class="chats-list" id="chats-list">
                     <div class="no-chats" id="no-chats">
@@ -71,9 +67,7 @@
                         <div class="current-chat-status" id="current-chat-status">чтобы начать общение</div>
                     </div>
                     <div class="header-controls">
-                        <button class="control-btn" id="search-btn" title="Поиск пользователей">👥</button>
-                        <button class="control-btn" id="settings-btn" title="Настройки">⚙️</button>
-                        <button class="control-btn" id="logout-btn" title="Выйти">🚪</button>
+                        <button class="control-btn logout-btn" id="logout-btn" title="Выйти">🚪 Выйти</button>
                     </div>
                 </div>
                 
@@ -96,10 +90,20 @@
                 
                 <!-- Панель ввода сообщения -->
                 <div class="messenger-footer">
+                    <div class="footer-controls">
+                        <button class="footer-btn" id="attach-btn" title="Прикрепить файл">📎</button>
+                        <input type="file" id="file-upload" style="display: none;" accept="*/*">
+                    </div>
                     <input type="text" class="message-input" placeholder="Введите сообщение..." id="message-input" disabled>
                     <button class="send-btn" id="send-btn" disabled>
                         <span class="send-icon">📤</span>
                     </button>
+                </div>
+
+                <!-- Нижняя панель управления -->
+                <div class="bottom-panel">
+                    <button class="bottom-btn" id="search-bottom-btn">🔍 Поиск</button>
+                    <button class="bottom-btn" id="settings-bottom-btn">⚙️ Настройки</button>
                 </div>
             </div>
         </div>
@@ -123,6 +127,32 @@
                         <p>Начните вводить запрос для поиска</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания группы -->
+    <div id="group-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>👥 Создание группы</h3>
+                <button class="close-modal" id="close-group-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Название группы:</label>
+                    <input type="text" class="settings-input" id="group-name" placeholder="Введите название группы">
+                </div>
+                <div class="form-group">
+                    <label>Поиск участников:</label>
+                    <input type="text" class="search-input" id="group-user-search" placeholder="Введите username пользователя">
+                    <div class="search-results" id="group-search-results" style="max-height: 150px;"></div>
+                </div>
+                <div class="form-group">
+                    <label>Участники группы:</label>
+                    <div class="selected-users" id="selected-users"></div>
+                </div>
+                <button class="save-btn" id="create-group-btn">Создать группу</button>
             </div>
         </div>
     </div>
@@ -168,6 +198,13 @@
                                     <button class="change-btn" id="change-username-btn">🔄 Сменить</button>
                                 </div>
                                 <small>Можно сменить если не занят</small>
+                            </div>
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="allow-group-invites" class="checkbox" checked>
+                                    <span class="checkmark"></span>
+                                    Разрешить добавлять меня в группы
+                                </label>
                             </div>
                             <button class="save-btn" id="save-profile-btn">💾 Сохранить профиль</button>
                         </div>
@@ -232,10 +269,24 @@
                                     <span class="checkmark"></span>
                                     Анимации
                                 </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="sounds-enabled" class="checkbox" checked>
+                                    <span class="checkmark"></span>
+                                    Звуки уведомлений
+                                </label>
                             </div>
                         </div>
 
-                        <button class="save-btn" id="save-theme-btn">💾 Применить тему</button>
+                        <div class="form-group">
+                            <label>📏 Размер панелей:</label>
+                            <select id="panel-size" class="settings-select">
+                                <option value="small">Маленький</option>
+                                <option value="medium" selected>Средний</option>
+                                <option value="large">Большой</option>
+                            </select>
+                        </div>
+
+                        <button class="save-btn" id="save-theme-btn">💾 Применить настройки</button>
                     </div>
                 </div>
 
@@ -259,6 +310,22 @@
                                 <div class="glow-color-option" data-color="#8E8E93" style="background: #8E8E93"></div>
                             </div>
                             <input type="color" id="glow-color-custom" class="color-picker" value="#007AFF">
+                        </div>
+
+                        <div class="form-group">
+                            <label>📍 Положение свечения:</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="glow-position" value="back" checked>
+                                    <span class="radiomark"></span>
+                                    Сзади (только тень)
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="glow-position" value="front">
+                                    <span class="radiomark"></span>
+                                    Спереди (вся панель)
+                                </label>
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -338,6 +405,17 @@
             </div>
         </div>
     </div>
+
+    <!-- Аудио для звуков -->
+    <audio id="hover-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+    </audio>
+    <audio id="click-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+    </audio>
+    <audio id="message-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+    </audio>
 
     <script src="script.js"></script>
 </body>
