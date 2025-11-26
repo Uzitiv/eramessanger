@@ -204,7 +204,7 @@ app.post('/api/login', (req, res) => {
   });
 });
 
-// Поиск пользователей
+// Поиск пользователей - ИСПРАВЛЕННЫЙ МЕТОД
 app.get('/api/users/search', authenticateToken, (req, res) => {
   const { query } = req.query;
 
@@ -214,7 +214,7 @@ app.get('/api/users/search', authenticateToken, (req, res) => {
 
   const searchQuery = `%${query.trim()}%`;
   
-  db.all(`SELECT id, username, name, status, avatar FROM users 
+  db.all(`SELECT id, username, name, status, avatar, allow_group_invites FROM users 
           WHERE (username LIKE ? OR name LIKE ?) AND id != ? 
           ORDER BY 
             CASE WHEN username LIKE ? THEN 1 ELSE 2 END,
@@ -446,14 +446,14 @@ app.post('/api/groups', authenticateToken, (req, res) => {
 
   // Проверяем, разрешено ли добавлять пользователей
   const placeholders = userIds.map(() => '?').join(',');
-  const checkQuery = `SELECT id, username, allow_group_invites FROM users WHERE id IN (${placeholders})`;
+  const checkQuery = `SELECT id, username, name, allow_group_invites FROM users WHERE id IN (${placeholders})`;
   
   db.all(checkQuery, userIds, (err, users) => {
     if (err) {
       return res.status(500).json({ error: 'Ошибка проверки пользователей' });
     }
 
-    const notAllowedUsers = users.filter(user => !user.allow_group_invites);
+    const notAllowedUsers = users.filter(user => user.allow_group_invites === 0);
     if (notAllowedUsers.length > 0) {
       const usernames = notAllowedUsers.map(u => u.username).join(', ');
       return res.status(400).json({ 
@@ -498,7 +498,7 @@ app.post('/api/groups', authenticateToken, (req, res) => {
   });
 });
 
-// Обновление профиля
+// Обновление профиля - ИСПРАВЛЕННЫЙ МЕТОД
 app.put('/api/profile', authenticateToken, (req, res) => {
   const { name, status, avatar, allow_group_invites } = req.body;
   const userId = req.user.id;
@@ -510,6 +510,7 @@ app.put('/api/profile', authenticateToken, (req, res) => {
   db.run('UPDATE users SET name = ?, status = ?, avatar = ?, allow_group_invites = ? WHERE id = ?', 
     [name.trim(), status || 'в сети', avatar, allow_group_invites !== undefined ? allow_group_invites : true, userId], function(err) {
       if (err) {
+        console.error('Profile update error:', err);
         return res.status(500).json({ error: 'Ошибка обновления профиля' });
       }
 
@@ -517,6 +518,7 @@ app.put('/api/profile', authenticateToken, (req, res) => {
       db.get('SELECT id, username, name, status, avatar, allow_group_invites, settings FROM users WHERE id = ?', 
         [userId], (err, user) => {
           if (err) {
+            console.error('Get user error:', err);
             return res.status(500).json({ error: 'Ошибка получения профиля' });
           }
 
@@ -543,7 +545,7 @@ app.put('/api/profile', authenticateToken, (req, res) => {
     });
 });
 
-// Смена username
+// Смена username - ИСПРАВЛЕННЫЙ МЕТОД
 app.put('/api/profile/username', authenticateToken, (req, res) => {
   const { username } = req.body;
   const userId = req.user.id;
@@ -557,6 +559,7 @@ app.put('/api/profile/username', authenticateToken, (req, res) => {
   // Проверяем, не занят ли username
   db.get('SELECT id FROM users WHERE username = ? AND id != ?', [newUsername, userId], (err, existingUser) => {
     if (err) {
+      console.error('Username check error:', err);
       return res.status(500).json({ error: 'Ошибка сервера' });
     }
 
@@ -567,6 +570,7 @@ app.put('/api/profile/username', authenticateToken, (req, res) => {
     // Обновляем username
     db.run('UPDATE users SET username = ? WHERE id = ?', [newUsername, userId], function(err) {
       if (err) {
+        console.error('Username update error:', err);
         return res.status(500).json({ error: 'Ошибка обновления username' });
       }
 
@@ -577,6 +581,7 @@ app.put('/api/profile/username', authenticateToken, (req, res) => {
       db.get('SELECT id, username, name, status, avatar, allow_group_invites, settings FROM users WHERE id = ?', 
         [userId], (err, user) => {
           if (err) {
+            console.error('Get updated user error:', err);
             return res.status(500).json({ error: 'Ошибка получения профиля' });
           }
 
