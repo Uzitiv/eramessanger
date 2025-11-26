@@ -24,15 +24,24 @@ class Messenger {
         this.checkAuth();
         this.createAudioElements();
         this.setupMobileView();
+        
+        // Добавляем проверку кнопок после инициализации
+        setTimeout(() => this.checkButtons(), 100);
     }
-
+checkButtons() {
+        console.log('Проверка кнопок:');
+        console.log('new-chat-btn:', document.getElementById('new-chat-btn'));
+        console.log('find-users-btn:', document.getElementById('find-users-btn'));
+        console.log('search-bottom-btn:', document.getElementById('search-bottom-btn'));
+    }
     setupMobileView() {
         if (this.isMobile) {
             document.body.classList.add('mobile-view');
             document.querySelector('.bottom-panel').style.display = 'none';
         }
     }
-
+ bindEvents() {
+        console.log('Привязка событий...');
     createAudioElements() {
         this.hoverSound = document.getElementById('hover-sound');
         this.clickSound = document.getElementById('click-sound');
@@ -58,6 +67,50 @@ class Messenger {
             e.preventDefault();
             this.showLoginForm();
         });
+        // ОСНОВНЫЕ КНОПКИ ПОИСКА - ПРОСТАЯ ПРИВЯЗКА
+        const newChatBtn = document.getElementById('new-chat-btn');
+        if (newChatBtn) {
+            console.log('Привязываем new-chat-btn');
+            newChatBtn.addEventListener('click', () => {
+                console.log('Кнопка new-chat-btn нажата');
+                this.showSearchModal();
+            });
+        }
+
+        const findUsersBtn = document.getElementById('find-users-btn');
+        if (findUsersBtn) {
+            console.log('Привязываем find-users-btn');
+            findUsersBtn.addEventListener('click', () => {
+                console.log('Кнопка find-users-btn нажата');
+                this.showSearchModal();
+            });
+        }
+
+        const searchBottomBtn = document.getElementById('search-bottom-btn');
+        if (searchBottomBtn) {
+            console.log('Привязываем search-bottom-btn');
+            searchBottomBtn.addEventListener('click', () => {
+                console.log('Кнопка search-bottom-btn нажата');
+                this.showSearchModal();
+            });
+        }
+        // Остальные кнопки
+        this.bindButton('new-group-btn', () => this.showGroupModal());
+        this.bindButton('close-search-modal', () => this.hideSearchModal());
+        this.bindButton('send-btn', () => this.sendMessage());
+        this.bindButton('settings-bottom-btn', () => this.showSettingsModal());
+        this.bindButton('logout-btn', () => this.logout());
+        this.bindButton('attach-btn', () => this.uploadFile());
+        this.bindButton('close-settings-modal', () => this.hideSettingsModal());
+        this.bindButton('close-group-modal', () => this.hideGroupModal());
+        this.bindButton('create-group-btn', () => this.createGroup());
+        this.bindButton('upload-avatar-btn', () => this.uploadAvatar());
+        this.bindButton('save-profile-btn', () => this.saveProfile());
+        this.bindButton('change-username-btn', () => this.changeUsername());
+        this.bindButton('save-theme-btn', () => this.saveThemeSettings());
+        this.bindButton('save-effects-btn', () => this.saveEffectsSettings());
+        this.bindButton('save-background-btn', () => this.saveBackgroundSettings());
+        this.bindButton('upload-background-btn', () => this.uploadBackground());
 
         // Основные кнопки
         this.bindButton('new-chat-btn', () => this.showSearchModal());
@@ -80,7 +133,7 @@ class Messenger {
         this.bindButton('save-background-btn', () => this.saveBackgroundSettings());
         this.bindButton('upload-background-btn', () => this.uploadBackground());
 
-        // Поиск
+               // Поиск
         document.getElementById('user-search-input').addEventListener('input', (e) => this.handleSearchInput(e.target.value));
         document.getElementById('group-user-search').addEventListener('input', (e) => this.handleGroupUserSearch(e.target.value));
         
@@ -88,12 +141,10 @@ class Messenger {
         document.getElementById('message-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.sendMessage();
         });
-
         // Файлы
         document.getElementById('file-upload').addEventListener('change', (e) => this.handleFileUpload(e));
         document.getElementById('avatar-upload').addEventListener('change', (e) => this.handleAvatarUpload(e));
         document.getElementById('background-upload').addEventListener('change', (e) => this.handleBackgroundUpload(e));
-        
         // Настройки - табы
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => this.switchSettingsTab(e.target.dataset.tab));
@@ -115,6 +166,7 @@ class Messenger {
             radio.addEventListener('change', (e) => this.selectGlowPosition(e.target.value));
         });
 
+
         // Фон
         document.getElementById('background-type').addEventListener('change', (e) => this.switchBackgroundType(e.target.value));
         document.querySelectorAll('.gradient-option').forEach(option => {
@@ -132,15 +184,15 @@ class Messenger {
         this.addHoverSounds();
     }
 
-    bindButton(id, handler) {
+  bindButton(id, handler) {
         const element = document.getElementById(id);
         if (element) {
             element.addEventListener('click', handler);
+            console.log(`Кнопка ${id} привязана`);
         } else {
             console.warn(`Элемент с id "${id}" не найден`);
         }
     }
-
     handleResize() {
         this.isMobile = this.checkMobile();
         this.setupMobileView();
@@ -836,6 +888,43 @@ async searchUsersForGroup(query) {
         `;
     }
 }
+        // ==================== ПОИСК ====================
+    showSearchModal() {
+        console.log('showSearchModal вызван');
+        const modal = document.getElementById('search-modal');
+        if (modal) {
+            console.log('Модальное окно найдено, открываем...');
+            modal.classList.add('active');
+            
+            const searchInput = document.getElementById('user-search-input');
+            const searchResults = document.getElementById('user-search-results');
+            
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.focus();
+                console.log('Поле поиска очищено и в фокусе');
+            }
+            if (searchResults) {
+                searchResults.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <p>Начните вводить запрос для поиска</p>
+                    </div>
+                `;
+                console.log('Результаты поиска очищены');
+            }
+        } else {
+            console.error('Модальное окно search-modal не найдено!');
+        }
+    }
+
+    hideSearchModal() {
+        console.log('hideSearchModal вызван');
+        const modal = document.getElementById('search-modal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
     // ==================== НАСТРОЙКИ ====================
     async loadUserSettings() {
         try {
