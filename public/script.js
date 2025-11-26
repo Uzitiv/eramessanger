@@ -10,53 +10,49 @@ class Messenger {
         this.backgroundImageData = null;
         this.selectedUsers = [];
         this.fileData = null;
-        
-        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        this.isMobile = this.checkMobile();
         
         this.init();
+    }
+
+    checkMobile() {
+        return window.innerWidth <= 768;
     }
 
     init() {
         this.bindEvents();
         this.checkAuth();
         this.createAudioElements();
+        this.setupMobileView();
+    }
+
+    setupMobileView() {
+        if (this.isMobile) {
+            document.body.classList.add('mobile-view');
+            // Скрываем нижнюю панель на мобильных, так как у нас есть нативная навигация
+            document.querySelector('.bottom-panel').style.display = 'none';
+        }
     }
 
     createAudioElements() {
-        this.hoverSound = this.createBeepSound(800, 0.1);
-        this.clickSound = this.createBeepSound(1000, 0.2);
-        this.messageSound = this.createBeepSound(600, 0.3);
+        // Создаем базовые звуки
+        this.hoverSound = document.getElementById('hover-sound');
+        this.clickSound = document.getElementById('click-sound');
+        this.messageSound = document.getElementById('message-sound');
+        
+        // Добавляем реальные звуки через Base64 (короткие бинары)
+        this.setupAudioSources();
     }
 
-    createBeepSound(frequency, duration) {
-        try {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = frequency;
-            oscillator.type = 'sine';
-            
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + duration);
-            
-            return {
-                play: () => {
-                    if (this.userSettings.soundsEnabled) {
-                        this.createBeepSound(frequency, duration);
-                    }
-                }
-            };
-        } catch (e) {
-            console.log('Web Audio API not supported', e);
-            return { play: () => {} };
-        }
+    setupAudioSources() {
+        // В реальном приложении заменить на настоящие звуковые файлы
+        const hoverAudio = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        const clickAudio = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        const messageAudio = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        
+        this.hoverSound.src = hoverAudio;
+        this.clickSound.src = clickAudio;
+        this.messageSound.src = messageAudio;
     }
 
     playSound(sound) {
@@ -67,6 +63,7 @@ class Messenger {
     }
 
     bindEvents() {
+        // Авторизация
         document.getElementById('login-form').addEventListener('submit', (e) => this.handleLogin(e));
         document.getElementById('register-form').addEventListener('submit', (e) => this.handleRegister(e));
         document.getElementById('show-register').addEventListener('click', (e) => {
@@ -78,6 +75,7 @@ class Messenger {
             this.showLoginForm();
         });
 
+        // Чат
         document.getElementById('new-chat-btn').addEventListener('click', () => this.showSearchModal());
         document.getElementById('new-group-btn').addEventListener('click', () => this.showGroupModal());
         document.getElementById('find-users-btn').addEventListener('click', () => this.showSearchModal());
@@ -88,32 +86,39 @@ class Messenger {
             if (e.key === 'Enter') this.sendMessage();
         });
         
+        // Группы
         document.getElementById('close-group-modal').addEventListener('click', () => this.hideGroupModal());
         document.getElementById('group-user-search').addEventListener('input', (e) => this.handleGroupUserSearch(e.target.value));
         document.getElementById('create-group-btn').addEventListener('click', () => this.createGroup());
         
+        // Управление
         document.getElementById('search-bottom-btn').addEventListener('click', () => this.showSearchModal());
         document.getElementById('settings-bottom-btn').addEventListener('click', () => this.showSettingsModal());
         document.getElementById('logout-btn').addEventListener('click', () => this.logout());
         document.getElementById('attach-btn').addEventListener('click', () => this.uploadFile());
         document.getElementById('file-upload').addEventListener('change', (e) => this.handleFileUpload(e));
         
+        // Настройки
         document.getElementById('close-settings-modal').addEventListener('click', () => this.hideSettingsModal());
         
+        // Табы настроек
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => this.switchSettingsTab(e.target.dataset.tab));
         });
 
+        // Профиль
         document.getElementById('upload-avatar-btn').addEventListener('click', () => this.uploadAvatar());
         document.getElementById('avatar-upload').addEventListener('change', (e) => this.handleAvatarUpload(e));
         document.getElementById('save-profile-btn').addEventListener('click', () => this.saveProfile());
         document.getElementById('change-username-btn').addEventListener('click', () => this.changeUsername());
 
+        // Тема
         document.querySelectorAll('.theme-option').forEach(option => {
             option.addEventListener('click', (e) => this.selectTheme(e.currentTarget));
         });
         document.getElementById('save-theme-btn').addEventListener('click', () => this.saveThemeSettings());
 
+        // Эффекты
         document.getElementById('window-opacity').addEventListener('input', (e) => this.updateOpacityPreview(e.target.value));
         document.querySelectorAll('.glow-color-option').forEach(option => {
             option.addEventListener('click', (e) => this.selectGlowColor(e.currentTarget));
@@ -125,6 +130,7 @@ class Messenger {
         });
         document.getElementById('save-effects-btn').addEventListener('click', () => this.saveEffectsSettings());
 
+        // Фон
         document.getElementById('background-type').addEventListener('change', (e) => this.switchBackgroundType(e.target.value));
         document.querySelectorAll('.gradient-option').forEach(option => {
             option.addEventListener('click', (e) => this.selectGradient(e.target));
@@ -137,80 +143,27 @@ class Messenger {
         document.getElementById('upload-background-btn').addEventListener('click', () => this.uploadBackground());
         document.getElementById('background-upload').addEventListener('change', (e) => this.handleBackgroundUpload(e));
 
+        // Адаптивность
+        window.addEventListener('resize', () => this.handleResize());
+
+        // Добавляем звуки наведения
         this.addHoverSounds();
     }
 
+    handleResize() {
+        this.isMobile = this.checkMobile();
+        this.setupMobileView();
+    }
+
     addHoverSounds() {
-        const interactiveElements = document.querySelectorAll('button, .chat-item, .user-result, .theme-option, .gradient-option, .tab-btn');
+        const interactiveElements = document.querySelectorAll('button, input[type="text"], input[type="password"], .chat-item, .user-result, .theme-option, .gradient-option');
         interactiveElements.forEach(el => {
-            if (this.isMobile) {
-                el.addEventListener('touchstart', () => this.playSound(this.hoverSound));
-            } else {
-                el.addEventListener('mouseenter', () => this.playSound(this.hoverSound));
-            }
+            el.addEventListener('mouseenter', () => this.playSound(this.hoverSound));
             el.addEventListener('click', () => this.playSound(this.clickSound));
         });
     }
 
-    adaptForMobile() {
-        document.addEventListener('click', (e) => {
-            if (!e.target.matches('.message-input') && !e.target.matches('.search-input') && !e.target.matches('.settings-input')) {
-                document.activeElement.blur();
-            }
-        });
-        
-        const inputs = document.querySelectorAll('input[type="text"], input[type="password"]');
-        inputs.forEach(input => {
-            input.addEventListener('focus', () => {
-                if (this.isMobile) {
-                    setTimeout(() => {
-                        document.body.style.zoom = "1.0";
-                    }, 100);
-                }
-            });
-        });
-    }
-
-    showLoadingIndicator() {
-        let loader = document.getElementById('mobile-loader');
-        if (!loader) {
-            loader = document.createElement('div');
-            loader.id = 'mobile-loader';
-            loader.innerHTML = `
-                <div style="
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: var(--bg-primary);
-                    padding: 20px;
-                    border-radius: 10px;
-                    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                    z-index: 10000;
-                ">
-                    <div style="text-align: center; color: var(--text-primary);">
-                        <div style="margin-bottom: 10px;">Отправка файла...</div>
-                        <div style="width: 20px; height: 20px; border: 2px solid #ccc; border-top: 2px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-                    </div>
-                </div>
-                <style>
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                </style>
-            `;
-            document.body.appendChild(loader);
-        }
-    }
-
-    hideLoadingIndicator() {
-        const loader = document.getElementById('mobile-loader');
-        if (loader) {
-            loader.remove();
-        }
-    }
-
+    // ==================== АВТОРИЗАЦИЯ ====================
     async handleLogin(e) {
         e.preventDefault();
         const username = document.getElementById('login-username').value.trim();
@@ -325,8 +278,63 @@ class Messenger {
         document.getElementById('app-container').style.display = 'block';
         
         if (this.isMobile) {
-            document.body.classList.add('mobile-device');
-            this.adaptForMobile();
+            this.setupMobileNavigation();
+        }
+    }
+
+    setupMobileNavigation() {
+        // Добавляем мобильную навигацию если её ещё нет
+        if (!document.querySelector('.mobile-nav')) {
+            const mobileNav = document.createElement('div');
+            mobileNav.className = 'mobile-nav';
+            mobileNav.innerHTML = `
+                <button class="mobile-nav-btn active" data-action="chats">
+                    <span>💬</span>
+                    <span>Чаты</span>
+                </button>
+                <button class="mobile-nav-btn" data-action="search">
+                    <span>🔍</span>
+                    <span>Поиск</span>
+                </button>
+                <button class="mobile-nav-btn" data-action="groups">
+                    <span>👥</span>
+                    <span>Группы</span>
+                </button>
+                <button class="mobile-nav-btn" data-action="settings">
+                    <span>⚙️</span>
+                    <span>Настройки</span>
+                </button>
+            `;
+            document.querySelector('.messenger-container').appendChild(mobileNav);
+
+            // Добавляем обработчики для мобильной навигации
+            mobileNav.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const action = e.currentTarget.dataset.action;
+                    this.handleMobileNavAction(action);
+                    
+                    // Обновляем активную кнопку
+                    mobileNav.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                });
+            });
+        }
+    }
+
+    handleMobileNavAction(action) {
+        switch (action) {
+            case 'chats':
+                // Показываем список чатов (по умолчанию)
+                break;
+            case 'search':
+                this.showSearchModal();
+                break;
+            case 'groups':
+                this.showGroupModal();
+                break;
+            case 'settings':
+                this.showSettingsModal();
+                break;
         }
     }
 
@@ -342,6 +350,7 @@ class Messenger {
         this.hideError('login-error');
     }
 
+    // ==================== ЧАТЫ И СООБЩЕНИЯ ====================
     async loadChats() {
         try {
             const response = await this.apiCall('/api/chats');
@@ -375,13 +384,13 @@ class Messenger {
             const avatarStyle = chat.avatar ? `style="background-image: url(${chat.avatar})"` : '';
             const lastMessage = chat.lastMessage ? 
                 (chat.lastMessage.length > 35 ? chat.lastMessage.substring(0, 35) + '...' : chat.lastMessage) : 
-                'Новый чат';
+                'Чат создан';
             
-            const groupIcon = chat.is_group ? '' : '';
+            const groupIcon = chat.is_group ? '👥 ' : '';
                 
             chatElement.innerHTML = `
                 <div class="chat-avatar" ${avatarStyle}>
-                    ${chat.avatar ? '' : (chat.is_group ? 'Г' : chat.name.charAt(0))}
+                    ${chat.avatar ? '' : (chat.is_group ? '👥' : chat.name.charAt(0))}
                 </div>
                 <div class="chat-info">
                     <div class="chat-name">${groupIcon}${chat.name}</div>
@@ -390,15 +399,7 @@ class Messenger {
                 ${chat.unread > 0 ? `<div class="unread-badge">${chat.unread}</div>` : ''}
             `;
             
-            if (this.isMobile) {
-                chatElement.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    this.selectChat(chat);
-                });
-            } else {
-                chatElement.addEventListener('click', () => this.selectChat(chat));
-            }
-            
+            chatElement.addEventListener('click', () => this.selectChat(chat));
             chatsList.appendChild(chatElement);
         });
     }
@@ -406,16 +407,42 @@ class Messenger {
     async selectChat(chat) {
         this.activeChatId = chat.id;
         
+        // Обновляем заголовок
         document.getElementById('current-chat-name').textContent = chat.name;
         document.getElementById('current-chat-status').textContent = chat.status;
         
+        // Активируем поле ввода
         document.getElementById('message-input').disabled = false;
         document.getElementById('send-btn').disabled = false;
         document.getElementById('message-input').placeholder = `Сообщение для ${chat.name}...`;
         document.getElementById('message-input').focus();
 
+        // Загружаем сообщения
         await this.loadMessages(chat.id);
+        
+        // Обновляем список чатов (подсветка активного)
         this.renderChats();
+
+        // На мобильных устройствах можно скрыть список чатов при выборе чата
+        if (this.isMobile) {
+            this.showChatView();
+        }
+    }
+
+    showChatView() {
+        // На мобильных переключаем вид на чат
+        if (this.isMobile) {
+            document.querySelector('.chats-panel').style.display = 'none';
+            document.querySelector('.messenger-container').style.display = 'flex';
+        }
+    }
+
+    showChatsList() {
+        // На мобильных переключаем вид на список чатов
+        if (this.isMobile) {
+            document.querySelector('.chats-panel').style.display = 'flex';
+            document.querySelector('.messenger-container').style.display = 'none';
+        }
     }
 
     async loadMessages(chatId) {
@@ -437,10 +464,10 @@ class Messenger {
         if (messages.length === 0) {
             chatContainer.innerHTML = `
                 <div class="welcome-message">
-                    <div class="welcome-icon">✉️</div>
-                    <h3>Начните общение</h3>
-                    <p>Это начало нового диалога</p>
-                    <p>Отправьте первое сообщение</p>
+                    <div class="welcome-icon">💬</div>
+                    <h3>Начните общение!</h3>
+                    <p>Это начало вашей беседы</p>
+                    <p>Напишите первое сообщение</p>
                 </div>
             `;
             return;
@@ -457,22 +484,24 @@ class Messenger {
             
             let attachmentHtml = '';
             if (message.attachment) {
+                const fileName = message.attachment.split('/').pop() || 'Файл';
                 attachmentHtml = `
                     <div class="attachment">
                         <span class="attachment-icon">📎</span>
-                        <span class="attachment-name">Прикрепленный файл</span>
+                        <span class="attachment-name">${fileName}</span>
                     </div>
                 `;
             }
             
             messageElement.innerHTML = `
-                <div class="message-text">${this.escapeHtml(message.text || '')}</div>
+                ${message.text ? `<div class="message-text">${this.escapeHtml(message.text)}</div>` : ''}
                 ${attachmentHtml}
                 <div class="message-time">${time}</div>
             `;
             chatContainer.appendChild(messageElement);
         });
 
+        // Прокрутка к последнему сообщению
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
@@ -491,10 +520,7 @@ class Messenger {
         try {
             let attachment = null;
             if (this.fileData) {
-                if (this.isMobile) {
-                    this.showLoadingIndicator();
-                }
-                
+                // Загружаем файл
                 const fileResponse = await this.apiCall('/api/upload', {
                     method: 'POST',
                     body: this.fileData
@@ -502,10 +528,6 @@ class Messenger {
                 if (fileResponse) {
                     const fileData = await fileResponse.json();
                     attachment = fileData.fileUrl;
-                }
-                
-                if (this.isMobile) {
-                    this.hideLoadingIndicator();
                 }
             }
 
@@ -520,9 +542,7 @@ class Messenger {
             if (response) {
                 input.value = '';
                 this.fileData = null;
-                if (this.isMobile) {
-                    input.blur();
-                }
+                document.getElementById('message-input').placeholder = 'Введите сообщение...';
                 await this.loadMessages(this.activeChatId);
                 await this.loadChats();
                 this.playSound(this.messageSound);
@@ -530,12 +550,10 @@ class Messenger {
         } catch (error) {
             console.error('Ошибка отправки сообщения:', error);
             alert('Ошибка отправки сообщения');
-            if (this.isMobile) {
-                this.hideLoadingIndicator();
-            }
         }
     }
 
+    // ==================== ФАЙЛЫ ====================
     uploadFile() {
         document.getElementById('file-upload').click();
     }
@@ -544,16 +562,24 @@ class Messenger {
         const file = event.target.files[0];
         if (!file) return;
 
+        // Показываем уведомление о загрузке
+        const input = document.getElementById('message-input');
+        input.placeholder = `Загрузка: ${file.name}...`;
+
         const reader = new FileReader();
         reader.onload = (e) => {
             this.fileData = e.target.result;
-            const input = document.getElementById('message-input');
-            input.placeholder = `Файл: ${file.name}`;
-            input.value = '';
+            input.placeholder = `Файл готов: ${file.name}`;
+            input.value = ''; // Очищаем текстовое поле
+        };
+        reader.onerror = () => {
+            input.placeholder = 'Ошибка загрузки файла';
+            this.fileData = null;
         };
         reader.readAsDataURL(file);
     }
 
+    // ==================== ГРУППЫ ====================
     showGroupModal() {
         document.getElementById('group-modal').classList.add('active');
         document.getElementById('group-name').value = '';
@@ -607,6 +633,7 @@ class Messenger {
     renderGroupSearchResults(users) {
         const resultsContainer = document.getElementById('group-search-results');
         
+        // Фильтруем уже выбранных пользователей и текущего пользователя
         const filteredUsers = users.filter(user => 
             user.id !== this.currentUser.id && 
             !this.selectedUsers.some(selected => selected.id === user.id)
@@ -649,12 +676,14 @@ class Messenger {
             this.renderSelectedUsers();
             document.getElementById('group-user-search').value = '';
             document.getElementById('group-search-results').innerHTML = '';
+            this.playSound(this.clickSound);
         }
     }
 
     removeUserFromGroup(userId) {
         this.selectedUsers = this.selectedUsers.filter(user => user.id !== userId);
         this.renderSelectedUsers();
+        this.playSound(this.clickSound);
     }
 
     renderSelectedUsers() {
@@ -700,6 +729,7 @@ class Messenger {
                 alert('Группа успешно создана!');
                 this.hideGroupModal();
                 await this.loadChats();
+                this.playSound(this.messageSound);
             }
         } catch (error) {
             console.error('Ошибка создания группы:', error);
@@ -708,6 +738,7 @@ class Messenger {
         }
     }
 
+    // ==================== ПОИСК ПОЛЬЗОВАТЕЛЕЙ ====================
     handleSearchInput(query) {
         clearTimeout(this.searchTimeout);
         this.searchTimeout = setTimeout(() => {
@@ -748,6 +779,7 @@ class Messenger {
     renderSearchResults(users) {
         const resultsContainer = document.getElementById('user-search-results');
         
+        // Фильтруем текущего пользователя
         const filteredUsers = users.filter(user => user.id !== this.currentUser.id);
 
         if (filteredUsers.length === 0) {
@@ -792,13 +824,16 @@ class Messenger {
                 const result = await response.json();
                 
                 if (result.exists) {
+                    // Чат уже существует, просто выбираем его
                     const existingChat = this.chats.find(chat => chat.id === result.id);
                     if (existingChat) {
                         this.selectChat(existingChat);
                     }
                 } else {
+                    // Новый чат создан
                     await this.loadChats();
                     
+                    // Находим новый чат и выбираем его
                     const newChat = this.chats.find(chat => 
                         chat.username === user.username || chat.other_user_id === user.id
                     );
@@ -809,6 +844,7 @@ class Messenger {
                 }
                 
                 this.hideSearchModal();
+                this.playSound(this.clickSound);
             }
         } catch (error) {
             console.error('Ошибка создания чата:', error);
@@ -819,19 +855,11 @@ class Messenger {
     showSearchModal() {
         document.getElementById('search-modal').classList.add('active');
         document.getElementById('user-search-input').value = '';
-        
-        if (this.isMobile) {
-            setTimeout(() => {
-                document.getElementById('user-search-input').focus();
-            }, 300);
-        } else {
-            document.getElementById('user-search-input').focus();
-        }
-        
+        document.getElementById('user-search-input').focus();
         document.getElementById('user-search-results').innerHTML = `
             <div class="no-results">
                 <div class="no-results-icon">🔍</div>
-                <p>Начните вводить имя пользователя</p>
+                <p>Начните вводить запрос для поиска</p>
             </div>
         `;
     }
@@ -840,6 +868,7 @@ class Messenger {
         document.getElementById('search-modal').classList.remove('active');
     }
 
+    // ==================== НАСТРОЙКИ ====================
     async loadUserSettings() {
         try {
             const response = await this.apiCall('/api/settings');
@@ -850,6 +879,7 @@ class Messenger {
             }
         } catch (error) {
             console.error('Ошибка загрузки настроек:', error);
+            // Устанавливаем настройки по умолчанию
             this.userSettings = {
                 theme: 'dark',
                 windowOpacity: 0.9,
@@ -872,14 +902,17 @@ class Messenger {
     }
 
     applySettings() {
+        // Применяем тему
         if (this.userSettings.theme) {
             this.applyTheme(this.userSettings.theme);
         }
 
+        // Прозрачность окон
         if (this.userSettings.windowOpacity !== undefined) {
             this.applyWindowOpacity(this.userSettings.windowOpacity);
         }
 
+        // Свечение
         if (this.userSettings.glowColor) {
             this.applyGlowColor(this.userSettings.glowColor);
         }
@@ -892,16 +925,19 @@ class Messenger {
             this.applyGlowIntensity(this.userSettings.glowIntensity);
         }
 
+        // Размер шрифта
         if (this.userSettings.fontSize) {
             document.documentElement.style.setProperty('--message-font-size', this.userSettings.fontSize);
         }
 
+        // Компактный режим
         if (this.userSettings.compactMode) {
             document.body.classList.add('compact-mode');
         } else {
             document.body.classList.remove('compact-mode');
         }
 
+        // Закругленные углы
         if (this.userSettings.roundedCorners) {
             document.body.classList.add('rounded-corners');
             document.body.classList.remove('no-rounded-corners');
@@ -910,23 +946,28 @@ class Messenger {
             document.body.classList.remove('rounded-corners');
         }
 
+        // Анимации
         if (!this.userSettings.animations) {
             document.body.classList.add('no-animations');
         } else {
             document.body.classList.remove('no-animations');
         }
 
+        // Размер панелей
         if (this.userSettings.panelSize) {
             this.applyPanelSize(this.userSettings.panelSize);
         }
 
+        // Фон
         if (this.userSettings.background) {
             this.applyBackground(this.userSettings.background);
         }
     }
 
     applyTheme(theme) {
+        // Удаляем все классы тем
         document.body.classList.remove('theme-dark', 'theme-light', 'theme-gray', 'theme-dark-gray', 'theme-blue', 'theme-purple', 'theme-green', 'theme-orange');
+        // Добавляем текущую тему
         document.body.classList.add(`theme-${theme}`);
     }
 
@@ -937,6 +978,7 @@ class Messenger {
         if (chatsPanel) chatsPanel.style.opacity = opacity;
         if (messengerContainer) messengerContainer.style.opacity = opacity;
         
+        // Обновляем значение в слайдере
         const opacitySlider = document.getElementById('window-opacity');
         const opacityValue = document.getElementById('opacity-value');
         
@@ -948,6 +990,7 @@ class Messenger {
         document.documentElement.style.setProperty('--glow-color', color);
         document.getElementById('glow-color-custom').value = color;
         
+        // Обновляем активную кнопку цвета
         document.querySelectorAll('.glow-color-option').forEach(option => {
             option.classList.remove('active');
         });
@@ -971,6 +1014,7 @@ class Messenger {
             }
         });
         
+        // Устанавливаем активную радио-кнопку
         document.querySelectorAll('input[name="glow-position"]').forEach(radio => {
             radio.checked = radio.value === position;
         });
@@ -1019,11 +1063,13 @@ class Messenger {
     populateSettingsForm() {
         if (!this.currentUser) return;
 
+        // Заполняем данные профиля
         document.getElementById('profile-name').value = this.currentUser.name || '';
         document.getElementById('profile-status').value = this.currentUser.status || 'в сети';
         document.getElementById('profile-username').value = this.currentUser.username || '';
         document.getElementById('allow-group-invites').checked = this.currentUser.allow_group_invites !== false;
 
+        // Аватар
         const avatarPreview = document.getElementById('avatar-preview');
         if (this.currentUser.avatar) {
             avatarPreview.style.backgroundImage = `url(${this.currentUser.avatar})`;
@@ -1033,6 +1079,7 @@ class Messenger {
             avatarPreview.innerHTML = '<div class="avatar-placeholder">👤</div>';
         }
 
+        // Настройки темы
         if (this.userSettings.theme) {
             document.querySelectorAll('.theme-option').forEach(option => {
                 option.classList.remove('active');
@@ -1043,6 +1090,7 @@ class Messenger {
             }
         }
 
+        // Настройки эффектов
         if (this.userSettings.windowOpacity !== undefined) {
             document.getElementById('window-opacity').value = this.userSettings.windowOpacity;
             document.getElementById('opacity-value').textContent = Math.round(this.userSettings.windowOpacity * 100) + '%';
@@ -1065,19 +1113,23 @@ class Messenger {
             document.getElementById('font-size').value = this.userSettings.fontSize;
         }
 
+        // Чекбоксы
         document.getElementById('compact-mode').checked = !!this.userSettings.compactMode;
         document.getElementById('rounded-corners').checked = this.userSettings.roundedCorners !== false;
         document.getElementById('animations').checked = this.userSettings.animations !== false;
         document.getElementById('sounds-enabled').checked = this.userSettings.soundsEnabled !== false;
 
+        // Размер панелей
         if (this.userSettings.panelSize) {
             document.getElementById('panel-size').value = this.userSettings.panelSize;
         }
 
+        // Настройки фона
         if (this.userSettings.background) {
             document.getElementById('background-type').value = this.userSettings.background.type;
             this.switchBackgroundType(this.userSettings.background.type);
             
+            // Устанавливаем активные опции в зависимости от типа фона
             switch (this.userSettings.background.type) {
                 case 'gradient':
                     const activeGradient = document.querySelector(`.gradient-option[data-gradient="${this.userSettings.background.value}"]`);
@@ -1106,6 +1158,7 @@ class Messenger {
     }
 
     switchSettingsTab(tabName) {
+        // Скрываем все табы
         document.querySelectorAll('.tab-content').forEach(tab => {
             tab.classList.remove('active');
         });
@@ -1113,10 +1166,12 @@ class Messenger {
             btn.classList.remove('active');
         });
 
+        // Показываем выбранный таб
         document.getElementById(`${tabName}-tab`).classList.add('active');
         document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
     }
 
+    // ==================== ПРОФИЛЬ ====================
     uploadAvatar() {
         document.getElementById('avatar-upload').click();
     }
@@ -1125,6 +1180,7 @@ class Messenger {
         const file = event.target.files[0];
         if (!file) return;
 
+        // Проверяем тип файла
         if (!file.type.startsWith('image/')) {
             alert('Пожалуйста, выберите изображение');
             return;
@@ -1136,6 +1192,7 @@ class Messenger {
             avatarPreview.style.backgroundImage = `url(${e.target.result})`;
             avatarPreview.innerHTML = '';
             
+            // Сохраняем данные аватарки для отправки на сервер
             this.avatarData = e.target.result;
         };
         reader.readAsDataURL(file);
@@ -1167,6 +1224,7 @@ class Messenger {
                 this.currentUser = data.user;
                 localStorage.setItem('user', JSON.stringify(this.currentUser));
                 
+                // Обновляем аватар в интерфейсе
                 const avatarPreview = document.getElementById('avatar-preview');
                 if (this.currentUser.avatar) {
                     avatarPreview.style.backgroundImage = `url(${this.currentUser.avatar})`;
@@ -1175,11 +1233,12 @@ class Messenger {
                 
                 this.hideSettingsModal();
                 await this.loadChats();
-                alert('✅ Профиль успешно обновлен!');
+                alert('Профиль успешно обновлен!');
+                this.playSound(this.clickSound);
             }
         } catch (error) {
             console.error('Ошибка сохранения профиля:', error);
-            alert('❌ Ошибка сохранения профиля');
+            alert('Ошибка сохранения профиля');
         }
     }
 
@@ -1213,15 +1272,17 @@ class Messenger {
                 this.token = data.token;
                 localStorage.setItem('token', this.token);
                 localStorage.setItem('user', JSON.stringify(this.currentUser));
-                alert('✅ Username успешно изменен!');
+                alert('Username успешно изменен!');
+                this.playSound(this.clickSound);
             }
         } catch (error) {
             console.error('Ошибка смены username:', error);
             const errorData = await error.json();
-            alert(`❌ ${errorData.error}`);
+            alert(`${errorData.error}`);
         }
     }
 
+    // ==================== ТЕМА ====================
     selectTheme(element) {
         document.querySelectorAll('.theme-option').forEach(option => {
             option.classList.remove('active');
@@ -1245,9 +1306,11 @@ class Messenger {
 
         await this.saveSettings();
         this.applySettings();
-        alert('✅ Настройки успешно применены!');
+        alert('Настройки успешно применены!');
+        this.playSound(this.clickSound);
     }
 
+    // ==================== ЭФФЕКТЫ ====================
     updateOpacityPreview(value) {
         document.getElementById('opacity-value').textContent = Math.round(value * 100) + '%';
         this.applyWindowOpacity(value);
@@ -1291,14 +1354,18 @@ class Messenger {
 
         await this.saveSettings();
         this.applySettings();
-        alert('✅ Эффекты успешно применены!');
+        alert('Эффекты успешно применены!');
+        this.playSound(this.clickSound);
     }
 
+    // ==================== ФОН ====================
     switchBackgroundType(type) {
+        // Скрываем все опции
         document.querySelectorAll('.background-options').forEach(el => {
             el.style.display = 'none';
         });
         
+        // Показываем выбранные опции
         const optionsElement = document.getElementById(`${type}-options`);
         if (optionsElement) {
             optionsElement.style.display = 'block';
@@ -1311,6 +1378,7 @@ class Messenger {
         });
         element.classList.add('active');
         
+        // Предпросмотр
         const gradient = element.dataset.gradient;
         document.body.style.background = gradient;
         document.body.style.backgroundSize = 'cover';
@@ -1320,6 +1388,7 @@ class Messenger {
         const gifUrl = element.dataset.gif;
         document.getElementById('gif-url').value = gifUrl;
         
+        // Предпросмотр
         document.body.style.background = `url(${gifUrl})`;
         document.body.style.backgroundSize = 'cover';
     }
@@ -1364,8 +1433,110 @@ class Messenger {
 
         await this.saveSettings();
         this.applyBackground(this.userSettings.background);
-        alert('✅ Фон успешно применен!');
+        alert('Фон успешно применен!');
+        this.playSound(this.clickSound);
     }
 
     uploadBackground() {
-        document.getElementById('background-upload
+        document.getElementById('background-upload').click();
+    }
+
+    handleBackgroundUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('Пожалуйста, выберите изображение');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.backgroundImageData = e.target.result;
+            
+            // Показываем превью
+            const preview = document.getElementById('background-preview');
+            preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+            preview.style.display = 'block';
+            
+            // Предпросмотр
+            document.body.style.background = `url(${e.target.result})`;
+            document.body.style.backgroundSize = 'cover';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ==================== СИСТЕМНЫЕ ФУНКЦИИ ====================
+    async saveSettings() {
+        try {
+            await this.apiCall('/api/settings', {
+                method: 'POST',
+                body: JSON.stringify(this.userSettings)
+            });
+        } catch (error) {
+            console.error('Ошибка сохранения настроек:', error);
+        }
+    }
+
+    logout() {
+        if (confirm('Вы уверены, что хотите выйти?')) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            this.currentUser = null;
+            this.token = null;
+            this.activeChatId = null;
+            this.chats = [];
+            this.userSettings = {};
+
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('auth-container').style.display = 'block';
+            document.getElementById('login-form').reset();
+            document.getElementById('register-form').reset();
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('register-form').style.display = 'none';
+        }
+    }
+
+    async apiCall(url, options = {}) {
+        if (!this.token) {
+            this.logout();
+            return null;
+        }
+
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        };
+
+        // Для загрузки файлов меняем Content-Type
+        if (options.body && typeof options.body === 'string' && options.body.startsWith('data:')) {
+            defaultOptions.headers['Content-Type'] = 'application/octet-stream';
+        }
+
+        try {
+            const response = await fetch(url, { ...defaultOptions, ...options });
+            
+            if (response.status === 401) {
+                this.logout();
+                return null;
+            }
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Ошибка сервера');
+            }
+
+            return response;
+        } catch (error) {
+            console.error('API call error:', error);
+            throw error;
+        }
+    }
+}
+
+// Запуск приложения
+document.addEventListener('DOMContentLoaded', () => {
+    window.messenger = new Messenger();
+});
