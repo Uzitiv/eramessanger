@@ -14,7 +14,14 @@ class Messenger {
         
         this.init();
     }
-
+logout() {
+    this.currentUser = null;
+    this.token = null;
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    document.getElementById('auth-container').style.display = 'block';
+    document.getElementById('app-container').style.display = 'none';
+}
     checkMobile() {
         return window.innerWidth <= 768;
     }
