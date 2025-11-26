@@ -1703,6 +1703,130 @@ body {
         font-size: 12px;
     }
 }
+/* Правая панель */
+.right-panel {
+    width: 280px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.panel-section h4 {
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.panel-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    background: rgba(60, 60, 60, 0.7);
+    border: none;
+    border-radius: 10px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    width: 100%;
+    text-align: left;
+}
+
+.panel-btn:hover {
+    background: rgba(80, 80, 80, 0.9);
+    transform: translateX(5px);
+}
+
+.panel-btn.logout-btn {
+    background: rgba(255, 59, 48, 0.2);
+    color: #ff3b30;
+}
+
+.panel-btn.logout-btn:hover {
+    background: rgba(255, 59, 48, 0.3);
+}
+
+.btn-icon {
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+.btn-text {
+    font-weight: 500;
+}
+
+.user-info-panel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.panel-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.panel-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.panel-user-name {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.panel-user-status {
+    color: var(--text-secondary);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Адаптивность для правой панели */
+@media (max-width: 1024px) {
+    .right-panel {
+        width: 250px;
+    }
+}
+
+@media (max-width: 768px) {
+    .right-panel {
+        display: none;
+    }
+    
+    .mobile-view .right-panel {
+        display: none;
+    }
+}
 
 /* Портретный режим для мобильных */
 @media (max-width: 768px) and (orientation: portrait) {
