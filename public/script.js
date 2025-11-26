@@ -29,30 +29,14 @@ class Messenger {
     setupMobileView() {
         if (this.isMobile) {
             document.body.classList.add('mobile-view');
-            // Скрываем нижнюю панель на мобильных, так как у нас есть нативная навигация
             document.querySelector('.bottom-panel').style.display = 'none';
         }
     }
 
     createAudioElements() {
-        // Создаем базовые звуки
         this.hoverSound = document.getElementById('hover-sound');
         this.clickSound = document.getElementById('click-sound');
         this.messageSound = document.getElementById('message-sound');
-        
-        // Добавляем реальные звуки через Base64 (короткие бинары)
-        this.setupAudioSources();
-    }
-
-    setupAudioSources() {
-        // В реальном приложении заменить на настоящие звуковые файлы
-        const hoverAudio = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-        const clickAudio = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-        const messageAudio = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-        
-        this.hoverSound.src = hoverAudio;
-        this.clickSound.src = clickAudio;
-        this.messageSound.src = messageAudio;
     }
 
     playSound(sound) {
@@ -75,48 +59,50 @@ class Messenger {
             this.showLoginForm();
         });
 
-        // Чат
-        document.getElementById('new-chat-btn').addEventListener('click', () => this.showSearchModal());
-        document.getElementById('new-group-btn').addEventListener('click', () => this.showGroupModal());
-        document.getElementById('find-users-btn').addEventListener('click', () => this.showSearchModal());
-        document.getElementById('close-search-modal').addEventListener('click', () => this.hideSearchModal());
+        // Основные кнопки
+        this.bindButton('new-chat-btn', () => this.showSearchModal());
+        this.bindButton('new-group-btn', () => this.showGroupModal());
+        this.bindButton('find-users-btn', () => this.showSearchModal());
+        this.bindButton('close-search-modal', () => this.hideSearchModal());
+        this.bindButton('send-btn', () => this.sendMessage());
+        this.bindButton('search-bottom-btn', () => this.showSearchModal());
+        this.bindButton('settings-bottom-btn', () => this.showSettingsModal());
+        this.bindButton('logout-btn', () => this.logout());
+        this.bindButton('attach-btn', () => this.uploadFile());
+        this.bindButton('close-settings-modal', () => this.hideSettingsModal());
+        this.bindButton('close-group-modal', () => this.hideGroupModal());
+        this.bindButton('create-group-btn', () => this.createGroup());
+        this.bindButton('upload-avatar-btn', () => this.uploadAvatar());
+        this.bindButton('save-profile-btn', () => this.saveProfile());
+        this.bindButton('change-username-btn', () => this.changeUsername());
+        this.bindButton('save-theme-btn', () => this.saveThemeSettings());
+        this.bindButton('save-effects-btn', () => this.saveEffectsSettings());
+        this.bindButton('save-background-btn', () => this.saveBackgroundSettings());
+        this.bindButton('upload-background-btn', () => this.uploadBackground());
+
+        // Поиск
         document.getElementById('user-search-input').addEventListener('input', (e) => this.handleSearchInput(e.target.value));
-        document.getElementById('send-btn').addEventListener('click', () => this.sendMessage());
+        document.getElementById('group-user-search').addEventListener('input', (e) => this.handleGroupUserSearch(e.target.value));
+        
+        // Сообщения
         document.getElementById('message-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.sendMessage();
         });
-        
-        // Группы
-        document.getElementById('close-group-modal').addEventListener('click', () => this.hideGroupModal());
-        document.getElementById('group-user-search').addEventListener('input', (e) => this.handleGroupUserSearch(e.target.value));
-        document.getElementById('create-group-btn').addEventListener('click', () => this.createGroup());
-        
-        // Управление
-        document.getElementById('search-bottom-btn').addEventListener('click', () => this.showSearchModal());
-        document.getElementById('settings-bottom-btn').addEventListener('click', () => this.showSettingsModal());
-        document.getElementById('logout-btn').addEventListener('click', () => this.logout());
-        document.getElementById('attach-btn').addEventListener('click', () => this.uploadFile());
+
+        // Файлы
         document.getElementById('file-upload').addEventListener('change', (e) => this.handleFileUpload(e));
+        document.getElementById('avatar-upload').addEventListener('change', (e) => this.handleAvatarUpload(e));
+        document.getElementById('background-upload').addEventListener('change', (e) => this.handleBackgroundUpload(e));
         
-        // Настройки
-        document.getElementById('close-settings-modal').addEventListener('click', () => this.hideSettingsModal());
-        
-        // Табы настроек
+        // Настройки - табы
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => this.switchSettingsTab(e.target.dataset.tab));
         });
-
-        // Профиль
-        document.getElementById('upload-avatar-btn').addEventListener('click', () => this.uploadAvatar());
-        document.getElementById('avatar-upload').addEventListener('change', (e) => this.handleAvatarUpload(e));
-        document.getElementById('save-profile-btn').addEventListener('click', () => this.saveProfile());
-        document.getElementById('change-username-btn').addEventListener('click', () => this.changeUsername());
 
         // Тема
         document.querySelectorAll('.theme-option').forEach(option => {
             option.addEventListener('click', (e) => this.selectTheme(e.currentTarget));
         });
-        document.getElementById('save-theme-btn').addEventListener('click', () => this.saveThemeSettings());
 
         // Эффекты
         document.getElementById('window-opacity').addEventListener('input', (e) => this.updateOpacityPreview(e.target.value));
@@ -128,7 +114,6 @@ class Messenger {
         document.querySelectorAll('input[name="glow-position"]').forEach(radio => {
             radio.addEventListener('change', (e) => this.selectGlowPosition(e.target.value));
         });
-        document.getElementById('save-effects-btn').addEventListener('click', () => this.saveEffectsSettings());
 
         // Фон
         document.getElementById('background-type').addEventListener('change', (e) => this.switchBackgroundType(e.target.value));
@@ -139,15 +124,21 @@ class Messenger {
             option.addEventListener('click', (e) => this.selectGif(e.target));
         });
         document.getElementById('solid-color').addEventListener('change', (e) => this.previewSolidColor(e.target.value));
-        document.getElementById('save-background-btn').addEventListener('click', () => this.saveBackgroundSettings());
-        document.getElementById('upload-background-btn').addEventListener('click', () => this.uploadBackground());
-        document.getElementById('background-upload').addEventListener('change', (e) => this.handleBackgroundUpload(e));
 
         // Адаптивность
         window.addEventListener('resize', () => this.handleResize());
 
-        // Добавляем звуки наведения
+        // Звуки
         this.addHoverSounds();
+    }
+
+    bindButton(id, handler) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('click', handler);
+        } else {
+            console.warn(`Элемент с id "${id}" не найден`);
+        }
     }
 
     handleResize() {
@@ -246,14 +237,18 @@ class Messenger {
 
     showError(elementId, message) {
         const element = document.getElementById(elementId);
-        element.textContent = message;
-        element.style.display = 'block';
+        if (element) {
+            element.textContent = message;
+            element.style.display = 'block';
+        }
     }
 
     hideError(elementId) {
         const element = document.getElementById(elementId);
-        element.textContent = '';
-        element.style.display = 'none';
+        if (element) {
+            element.textContent = '';
+            element.style.display = 'none';
+        }
     }
 
     checkAuth() {
@@ -283,7 +278,6 @@ class Messenger {
     }
 
     setupMobileNavigation() {
-        // Добавляем мобильную навигацию если её ещё нет
         if (!document.querySelector('.mobile-nav')) {
             const mobileNav = document.createElement('div');
             mobileNav.className = 'mobile-nav';
@@ -307,13 +301,11 @@ class Messenger {
             `;
             document.querySelector('.messenger-container').appendChild(mobileNav);
 
-            // Добавляем обработчики для мобильной навигации
             mobileNav.querySelectorAll('.mobile-nav-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const action = e.currentTarget.dataset.action;
                     this.handleMobileNavAction(action);
                     
-                    // Обновляем активную кнопку
                     mobileNav.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
                     e.currentTarget.classList.add('active');
                 });
@@ -324,7 +316,6 @@ class Messenger {
     handleMobileNavAction(action) {
         switch (action) {
             case 'chats':
-                // Показываем список чатов (по умолчанию)
                 break;
             case 'search':
                 this.showSearchModal();
@@ -367,6 +358,8 @@ class Messenger {
         const chatsList = document.getElementById('chats-list');
         const noChats = document.getElementById('no-chats');
         
+        if (!chatsList || !noChats) return;
+
         if (this.chats.length === 0) {
             chatsList.innerHTML = '';
             chatsList.appendChild(noChats);
@@ -408,40 +401,47 @@ class Messenger {
         this.activeChatId = chat.id;
         
         // Обновляем заголовок
-        document.getElementById('current-chat-name').textContent = chat.name;
-        document.getElementById('current-chat-status').textContent = chat.status;
+        const chatName = document.getElementById('current-chat-name');
+        const chatStatus = document.getElementById('current-chat-status');
+        if (chatName) chatName.textContent = chat.name;
+        if (chatStatus) chatStatus.textContent = chat.status;
         
         // Активируем поле ввода
-        document.getElementById('message-input').disabled = false;
-        document.getElementById('send-btn').disabled = false;
-        document.getElementById('message-input').placeholder = `Сообщение для ${chat.name}...`;
-        document.getElementById('message-input').focus();
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        if (messageInput) {
+            messageInput.disabled = false;
+            messageInput.placeholder = `Сообщение для ${chat.name}...`;
+            messageInput.focus();
+        }
+        if (sendBtn) sendBtn.disabled = false;
 
         // Загружаем сообщения
         await this.loadMessages(chat.id);
         
-        // Обновляем список чатов (подсветка активного)
+        // Обновляем список чатов
         this.renderChats();
 
-        // На мобильных устройствах можно скрыть список чатов при выборе чата
         if (this.isMobile) {
             this.showChatView();
         }
     }
 
     showChatView() {
-        // На мобильных переключаем вид на чат
         if (this.isMobile) {
-            document.querySelector('.chats-panel').style.display = 'none';
-            document.querySelector('.messenger-container').style.display = 'flex';
+            const chatsPanel = document.querySelector('.chats-panel');
+            const messengerContainer = document.querySelector('.messenger-container');
+            if (chatsPanel) chatsPanel.style.display = 'none';
+            if (messengerContainer) messengerContainer.style.display = 'flex';
         }
     }
 
     showChatsList() {
-        // На мобильных переключаем вид на список чатов
         if (this.isMobile) {
-            document.querySelector('.chats-panel').style.display = 'flex';
-            document.querySelector('.messenger-container').style.display = 'none';
+            const chatsPanel = document.querySelector('.chats-panel');
+            const messengerContainer = document.querySelector('.messenger-container');
+            if (chatsPanel) chatsPanel.style.display = 'flex';
+            if (messengerContainer) messengerContainer.style.display = 'none';
         }
     }
 
@@ -459,6 +459,8 @@ class Messenger {
 
     renderMessages(messages) {
         const chatContainer = document.getElementById('chat-container');
+        if (!chatContainer) return;
+
         chatContainer.innerHTML = '';
 
         if (messages.length === 0) {
@@ -501,7 +503,6 @@ class Messenger {
             chatContainer.appendChild(messageElement);
         });
 
-        // Прокрутка к последнему сообщению
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
@@ -513,14 +514,13 @@ class Messenger {
 
     async sendMessage() {
         const input = document.getElementById('message-input');
-        const text = input.value.trim();
+        const text = input ? input.value.trim() : '';
 
         if ((!text && !this.fileData) || !this.activeChatId) return;
 
         try {
             let attachment = null;
             if (this.fileData) {
-                // Загружаем файл
                 const fileResponse = await this.apiCall('/api/upload', {
                     method: 'POST',
                     body: this.fileData
@@ -540,9 +540,10 @@ class Messenger {
             });
 
             if (response) {
-                input.value = '';
+                if (input) input.value = '';
                 this.fileData = null;
-                document.getElementById('message-input').placeholder = 'Введите сообщение...';
+                const messageInput = document.getElementById('message-input');
+                if (messageInput) messageInput.placeholder = 'Введите сообщение...';
                 await this.loadMessages(this.activeChatId);
                 await this.loadChats();
                 this.playSound(this.messageSound);
@@ -555,33 +556,62 @@ class Messenger {
 
     // ==================== ФАЙЛЫ ====================
     uploadFile() {
-        document.getElementById('file-upload').click();
+        const fileUpload = document.getElementById('file-upload');
+        if (fileUpload) fileUpload.click();
     }
 
     async handleFileUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
 
-        // Показываем уведомление о загрузке
         const input = document.getElementById('message-input');
-        input.placeholder = `Загрузка: ${file.name}...`;
+        if (input) input.placeholder = `Загрузка: ${file.name}...`;
 
         const reader = new FileReader();
         reader.onload = (e) => {
             this.fileData = e.target.result;
-            input.placeholder = `Файл готов: ${file.name}`;
-            input.value = ''; // Очищаем текстовое поле
+            if (input) input.placeholder = `Файл готов: ${file.name}`;
+            if (input) input.value = '';
         };
         reader.onerror = () => {
-            input.placeholder = 'Ошибка загрузки файла';
+            if (input) input.placeholder = 'Ошибка загрузки файла';
             this.fileData = null;
         };
         reader.readAsDataURL(file);
     }
 
     // ==================== ГРУППЫ ====================
+    showGroupModal() {
+        const modal = document.getElementById('group-modal');
+        if (modal) modal.classList.add('active');
+        
+        const groupName = document.getElementById('group-name');
+        const groupSearch = document.getElementById('group-user-search');
+        const searchResults = document.getElementById('group-search-results');
+        
+        if (groupName) groupName.value = '';
+        if (groupSearch) groupSearch.value = '';
+        if (searchResults) searchResults.innerHTML = '';
+        
+        this.selectedUsers = [];
+        this.renderSelectedUsers();
+    }
+
+    hideGroupModal() {
+        const modal = document.getElementById('group-modal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    handleGroupUserSearch(query) {
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(() => {
+            this.searchUsersForGroup(query);
+        }, 300);
+    }
+
     async searchUsersForGroup(query) {
         const resultsContainer = document.getElementById('group-search-results');
+        if (!resultsContainer) return;
         
         if (!query || query.trim().length < 2) {
             resultsContainer.innerHTML = `
@@ -604,7 +634,7 @@ class Messenger {
             resultsContainer.innerHTML = `
                 <div class="no-results">
                     <div class="no-results-icon">❌</div>
-                    <p>Ошибка поиска: ${error.message}</p>
+                    <p>Ошибка поиска</p>
                 </div>
             `;
         }
@@ -612,8 +642,8 @@ class Messenger {
 
     renderGroupSearchResults(users) {
         const resultsContainer = document.getElementById('group-search-results');
+        if (!resultsContainer) return;
         
-        // Фильтруем уже выбранных пользователей и текущего пользователя
         const filteredUsers = users.filter(user => 
             user.id !== this.currentUser.id && 
             !this.selectedUsers.some(selected => selected.id === user.id)
@@ -635,8 +665,6 @@ class Messenger {
             userElement.className = 'user-result';
             
             const avatarStyle = user.avatar ? `style="background-image: url(${user.avatar})"` : '';
-            const allowGroupInvites = user.allow_group_invites !== false;
-            
             userElement.innerHTML = `
                 <div class="user-avatar" ${avatarStyle}>
                     ${user.avatar ? '' : user.name.charAt(0)}
@@ -644,25 +672,96 @@ class Messenger {
                 <div class="user-info">
                     <div class="user-name">${user.name}</div>
                     <div class="user-username">@${user.username}</div>
-                    <div class="user-status">${allowGroupInvites ? '✓ Можно добавлять в группы' : '✗ Запрещено добавлять в группы'}</div>
                 </div>
             `;
             
-            if (allowGroupInvites) {
-                userElement.addEventListener('click', () => this.addUserToGroup(user));
-            } else {
-                userElement.style.opacity = '0.6';
-                userElement.style.cursor = 'not-allowed';
-                userElement.title = 'Этот пользователь запретил добавлять себя в группы';
-            }
-            
+            userElement.addEventListener('click', () => this.addUserToGroup(user));
             resultsContainer.appendChild(userElement);
         });
     }
 
-// ==================== ПОИСК ПОЛЬЗОВАТЕЛЕЙ ====================
+    addUserToGroup(user) {
+        if (!this.selectedUsers.some(u => u.id === user.id)) {
+            this.selectedUsers.push(user);
+            this.renderSelectedUsers();
+            const groupSearch = document.getElementById('group-user-search');
+            const searchResults = document.getElementById('group-search-results');
+            if (groupSearch) groupSearch.value = '';
+            if (searchResults) searchResults.innerHTML = '';
+            this.playSound(this.clickSound);
+        }
+    }
+
+    removeUserFromGroup(userId) {
+        this.selectedUsers = this.selectedUsers.filter(user => user.id !== userId);
+        this.renderSelectedUsers();
+        this.playSound(this.clickSound);
+    }
+
+    renderSelectedUsers() {
+        const container = document.getElementById('selected-users');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        this.selectedUsers.forEach(user => {
+            const userElement = document.createElement('div');
+            userElement.className = 'selected-user';
+            userElement.innerHTML = `
+                ${user.name}
+                <button class="remove-user" onclick="messenger.removeUserFromGroup(${user.id})">×</button>
+            `;
+            container.appendChild(userElement);
+        });
+    }
+
+    async createGroup() {
+        const groupNameInput = document.getElementById('group-name');
+        const groupName = groupNameInput ? groupNameInput.value.trim() : '';
+        const userIds = this.selectedUsers.map(user => user.id);
+
+        if (!groupName) {
+            alert('Введите название группы');
+            return;
+        }
+
+        if (userIds.length === 0) {
+            alert('Добавьте хотя бы одного участника');
+            return;
+        }
+
+        try {
+            const response = await this.apiCall('/api/groups', {
+                method: 'POST',
+                body: JSON.stringify({
+                    groupName: groupName,
+                    userIds: userIds
+                })
+            });
+
+            if (response) {
+                alert('Группа успешно создана!');
+                this.hideGroupModal();
+                await this.loadChats();
+                this.playSound(this.messageSound);
+            }
+        } catch (error) {
+            console.error('Ошибка создания группы:', error);
+            alert(`Ошибка создания группы: ${error.message}`);
+        }
+    }
+
+    // ==================== ПОИСК ПОЛЬЗОВАТЕЛЕЙ ====================
+    handleSearchInput(query) {
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(() => {
+            this.searchUsers(query);
+        }, 300);
+    }
+
     async searchUsers(query) {
         const resultsContainer = document.getElementById('user-search-results');
+        if (!resultsContainer) return;
         
         if (!query || query.trim().length < 2) {
             resultsContainer.innerHTML = `
@@ -685,7 +784,7 @@ class Messenger {
             resultsContainer.innerHTML = `
                 <div class="no-results">
                     <div class="no-results-icon">❌</div>
-                    <p>Ошибка поиска: ${error.message}</p>
+                    <p>Ошибка поиска</p>
                 </div>
             `;
         }
@@ -693,8 +792,8 @@ class Messenger {
 
     renderSearchResults(users) {
         const resultsContainer = document.getElementById('user-search-results');
+        if (!resultsContainer) return;
         
-        // Фильтруем текущего пользователя
         const filteredUsers = users.filter(user => user.id !== this.currentUser.id);
 
         if (filteredUsers.length === 0) {
@@ -702,7 +801,6 @@ class Messenger {
                 <div class="no-results">
                     <div class="no-results-icon">👥</div>
                     <p>Пользователи не найдены</p>
-                    <p>Попробуйте изменить запрос</p>
                 </div>
             `;
             return;
@@ -721,13 +819,74 @@ class Messenger {
                 <div class="user-info">
                     <div class="user-name">${user.name}</div>
                     <div class="user-username">@${user.username}</div>
-                    <div class="user-status">${user.status || 'в сети'}</div>
                 </div>
             `;
             
             userElement.addEventListener('click', () => this.startChat(user));
             resultsContainer.appendChild(userElement);
         });
+    }
+
+    async startChat(user) {
+        try {
+            const response = await this.apiCall('/api/chats', {
+                method: 'POST',
+                body: JSON.stringify({ userId: user.id })
+            });
+
+            if (response) {
+                const result = await response.json();
+                
+                if (result.exists) {
+                    const existingChat = this.chats.find(chat => chat.id === result.id);
+                    if (existingChat) {
+                        this.selectChat(existingChat);
+                    }
+                } else {
+                    await this.loadChats();
+                    
+                    const newChat = this.chats.find(chat => 
+                        chat.username === user.username || chat.other_user_id === user.id
+                    );
+                    
+                    if (newChat) {
+                        this.selectChat(newChat);
+                    }
+                }
+                
+                this.hideSearchModal();
+                this.playSound(this.clickSound);
+            }
+        } catch (error) {
+            console.error('Ошибка создания чата:', error);
+            alert('Ошибка создания чата');
+        }
+    }
+
+    showSearchModal() {
+        const modal = document.getElementById('search-modal');
+        if (modal) modal.classList.add('active');
+        
+        const searchInput = document.getElementById('user-search-input');
+        const searchResults = document.getElementById('user-search-results');
+        
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
+        }
+        if (searchResults) {
+            searchResults.innerHTML = `
+                <div class="no-results">
+                    <div class="no-results-icon">🔍</div>
+                    <p>Начните вводить запрос для поиска</p>
+                </div>
+            `;
+        }
+    }
+
+    hideSearchModal() {
+        const modal = document.getElementById('search-modal');
+        if (modal) modal.classList.remove('active');
     }
 
     // ==================== НАСТРОЙКИ ====================
@@ -741,7 +900,6 @@ class Messenger {
             }
         } catch (error) {
             console.error('Ошибка загрузки настроек:', error);
-            // Устанавливаем настройки по умолчанию
             this.userSettings = {
                 theme: 'dark',
                 windowOpacity: 0.9,
@@ -764,17 +922,14 @@ class Messenger {
     }
 
     applySettings() {
-        // Применяем тему
         if (this.userSettings.theme) {
             this.applyTheme(this.userSettings.theme);
         }
 
-        // Прозрачность окон
         if (this.userSettings.windowOpacity !== undefined) {
             this.applyWindowOpacity(this.userSettings.windowOpacity);
         }
 
-        // Свечение
         if (this.userSettings.glowColor) {
             this.applyGlowColor(this.userSettings.glowColor);
         }
@@ -787,19 +942,16 @@ class Messenger {
             this.applyGlowIntensity(this.userSettings.glowIntensity);
         }
 
-        // Размер шрифта
         if (this.userSettings.fontSize) {
             document.documentElement.style.setProperty('--message-font-size', this.userSettings.fontSize);
         }
 
-        // Компактный режим
         if (this.userSettings.compactMode) {
             document.body.classList.add('compact-mode');
         } else {
             document.body.classList.remove('compact-mode');
         }
 
-        // Закругленные углы
         if (this.userSettings.roundedCorners) {
             document.body.classList.add('rounded-corners');
             document.body.classList.remove('no-rounded-corners');
@@ -808,28 +960,23 @@ class Messenger {
             document.body.classList.remove('rounded-corners');
         }
 
-        // Анимации
         if (!this.userSettings.animations) {
             document.body.classList.add('no-animations');
         } else {
             document.body.classList.remove('no-animations');
         }
 
-        // Размер панелей
         if (this.userSettings.panelSize) {
             this.applyPanelSize(this.userSettings.panelSize);
         }
 
-        // Фон
         if (this.userSettings.background) {
             this.applyBackground(this.userSettings.background);
         }
     }
 
     applyTheme(theme) {
-        // Удаляем все классы тем
         document.body.classList.remove('theme-dark', 'theme-light', 'theme-gray', 'theme-dark-gray', 'theme-blue', 'theme-purple', 'theme-green', 'theme-orange');
-        // Добавляем текущую тему
         document.body.classList.add(`theme-${theme}`);
     }
 
@@ -840,7 +987,6 @@ class Messenger {
         if (chatsPanel) chatsPanel.style.opacity = opacity;
         if (messengerContainer) messengerContainer.style.opacity = opacity;
         
-        // Обновляем значение в слайдере
         const opacitySlider = document.getElementById('window-opacity');
         const opacityValue = document.getElementById('opacity-value');
         
@@ -850,9 +996,9 @@ class Messenger {
 
     applyGlowColor(color) {
         document.documentElement.style.setProperty('--glow-color', color);
-        document.getElementById('glow-color-custom').value = color;
+        const customColor = document.getElementById('glow-color-custom');
+        if (customColor) customColor.value = color;
         
-        // Обновляем активную кнопку цвета
         document.querySelectorAll('.glow-color-option').forEach(option => {
             option.classList.remove('active');
         });
@@ -876,7 +1022,6 @@ class Messenger {
             }
         });
         
-        // Устанавливаем активную радио-кнопку
         document.querySelectorAll('input[name="glow-position"]').forEach(radio => {
             radio.checked = radio.value === position;
         });
@@ -884,13 +1029,17 @@ class Messenger {
 
     applyGlowIntensity(intensity) {
         document.documentElement.style.setProperty('--glow-intensity', intensity);
-        document.getElementById('glow-intensity').value = intensity;
-        document.getElementById('glow-intensity-value').textContent = Math.round(intensity * 100) + '%';
+        const intensitySlider = document.getElementById('glow-intensity');
+        const intensityValue = document.getElementById('glow-intensity-value');
+        
+        if (intensitySlider) intensitySlider.value = intensity;
+        if (intensityValue) intensityValue.textContent = Math.round(intensity * 100) + '%';
     }
 
     applyPanelSize(size) {
         document.documentElement.setAttribute('data-panel-size', size);
-        document.getElementById('panel-size').value = size;
+        const panelSelect = document.getElementById('panel-size');
+        if (panelSelect) panelSelect.value = size;
     }
 
     applyBackground(background) {
@@ -925,23 +1074,30 @@ class Messenger {
     populateSettingsForm() {
         if (!this.currentUser) return;
 
-        // Заполняем данные профиля
-        document.getElementById('profile-name').value = this.currentUser.name || '';
-        document.getElementById('profile-status').value = this.currentUser.status || 'в сети';
-        document.getElementById('profile-username').value = this.currentUser.username || '';
-        document.getElementById('allow-group-invites').checked = this.currentUser.allow_group_invites !== false;
+        // Профиль
+        const profileName = document.getElementById('profile-name');
+        const profileStatus = document.getElementById('profile-status');
+        const profileUsername = document.getElementById('profile-username');
+        const allowGroupInvites = document.getElementById('allow-group-invites');
+        
+        if (profileName) profileName.value = this.currentUser.name || '';
+        if (profileStatus) profileStatus.value = this.currentUser.status || 'в сети';
+        if (profileUsername) profileUsername.value = this.currentUser.username || '';
+        if (allowGroupInvites) allowGroupInvites.checked = this.currentUser.allow_group_invites !== false;
 
         // Аватар
         const avatarPreview = document.getElementById('avatar-preview');
-        if (this.currentUser.avatar) {
-            avatarPreview.style.backgroundImage = `url(${this.currentUser.avatar})`;
-            avatarPreview.innerHTML = '';
-        } else {
-            avatarPreview.style.backgroundImage = 'none';
-            avatarPreview.innerHTML = '<div class="avatar-placeholder">👤</div>';
+        if (avatarPreview) {
+            if (this.currentUser.avatar) {
+                avatarPreview.style.backgroundImage = `url(${this.currentUser.avatar})`;
+                avatarPreview.innerHTML = '';
+            } else {
+                avatarPreview.style.backgroundImage = 'none';
+                avatarPreview.innerHTML = '<div class="avatar-placeholder">👤</div>';
+            }
         }
 
-        // Настройки темы
+        // Тема
         if (this.userSettings.theme) {
             document.querySelectorAll('.theme-option').forEach(option => {
                 option.classList.remove('active');
@@ -952,10 +1108,12 @@ class Messenger {
             }
         }
 
-        // Настройки эффектов
+        // Эффекты
         if (this.userSettings.windowOpacity !== undefined) {
-            document.getElementById('window-opacity').value = this.userSettings.windowOpacity;
-            document.getElementById('opacity-value').textContent = Math.round(this.userSettings.windowOpacity * 100) + '%';
+            const opacitySlider = document.getElementById('window-opacity');
+            const opacityValue = document.getElementById('opacity-value');
+            if (opacitySlider) opacitySlider.value = this.userSettings.windowOpacity;
+            if (opacityValue) opacityValue.textContent = Math.round(this.userSettings.windowOpacity * 100) + '%';
         }
 
         if (this.userSettings.glowColor) {
@@ -967,31 +1125,42 @@ class Messenger {
         }
 
         if (this.userSettings.glowIntensity !== undefined) {
-            document.getElementById('glow-intensity').value = this.userSettings.glowIntensity;
-            document.getElementById('glow-intensity-value').textContent = Math.round(this.userSettings.glowIntensity * 100) + '%';
+            const intensitySlider = document.getElementById('glow-intensity');
+            const intensityValue = document.getElementById('glow-intensity-value');
+            if (intensitySlider) intensitySlider.value = this.userSettings.glowIntensity;
+            if (intensityValue) intensityValue.textContent = Math.round(this.userSettings.glowIntensity * 100) + '%';
         }
 
         if (this.userSettings.fontSize) {
-            document.getElementById('font-size').value = this.userSettings.fontSize;
+            const fontSize = document.getElementById('font-size');
+            if (fontSize) fontSize.value = this.userSettings.fontSize;
         }
 
         // Чекбоксы
-        document.getElementById('compact-mode').checked = !!this.userSettings.compactMode;
-        document.getElementById('rounded-corners').checked = this.userSettings.roundedCorners !== false;
-        document.getElementById('animations').checked = this.userSettings.animations !== false;
-        document.getElementById('sounds-enabled').checked = this.userSettings.soundsEnabled !== false;
+        const compactMode = document.getElementById('compact-mode');
+        const roundedCorners = document.getElementById('rounded-corners');
+        const animations = document.getElementById('animations');
+        const soundsEnabled = document.getElementById('sounds-enabled');
+        
+        if (compactMode) compactMode.checked = !!this.userSettings.compactMode;
+        if (roundedCorners) roundedCorners.checked = this.userSettings.roundedCorners !== false;
+        if (animations) animations.checked = this.userSettings.animations !== false;
+        if (soundsEnabled) soundsEnabled.checked = this.userSettings.soundsEnabled !== false;
 
         // Размер панелей
         if (this.userSettings.panelSize) {
-            document.getElementById('panel-size').value = this.userSettings.panelSize;
+            const panelSize = document.getElementById('panel-size');
+            if (panelSize) panelSize.value = this.userSettings.panelSize;
         }
 
-        // Настройки фона
+        // Фон
         if (this.userSettings.background) {
-            document.getElementById('background-type').value = this.userSettings.background.type;
-            this.switchBackgroundType(this.userSettings.background.type);
+            const backgroundType = document.getElementById('background-type');
+            if (backgroundType) {
+                backgroundType.value = this.userSettings.background.type;
+                this.switchBackgroundType(this.userSettings.background.type);
+            }
             
-            // Устанавливаем активные опции в зависимости от типа фона
             switch (this.userSettings.background.type) {
                 case 'gradient':
                     const activeGradient = document.querySelector(`.gradient-option[data-gradient="${this.userSettings.background.value}"]`);
@@ -1001,26 +1170,31 @@ class Messenger {
                     }
                     break;
                 case 'solid':
-                    document.getElementById('solid-color').value = this.userSettings.background.value;
+                    const solidColor = document.getElementById('solid-color');
+                    if (solidColor) solidColor.value = this.userSettings.background.value;
                     break;
                 case 'gif':
-                    document.getElementById('gif-url').value = this.userSettings.background.value;
+                    const gifUrl = document.getElementById('gif-url');
+                    if (gifUrl) gifUrl.value = this.userSettings.background.value;
                     break;
             }
         }
     }
 
     showSettingsModal() {
-        document.getElementById('settings-modal').classList.add('active');
-        this.populateSettingsForm();
+        const modal = document.getElementById('settings-modal');
+        if (modal) {
+            modal.classList.add('active');
+            this.populateSettingsForm();
+        }
     }
 
     hideSettingsModal() {
-        document.getElementById('settings-modal').classList.remove('active');
+        const modal = document.getElementById('settings-modal');
+        if (modal) modal.classList.remove('active');
     }
 
     switchSettingsTab(tabName) {
-        // Скрываем все табы
         document.querySelectorAll('.tab-content').forEach(tab => {
             tab.classList.remove('active');
         });
@@ -1028,16 +1202,49 @@ class Messenger {
             btn.classList.remove('active');
         });
 
-        // Показываем выбранный таб
-        document.getElementById(`${tabName}-tab`).classList.add('active');
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        const tabContent = document.getElementById(`${tabName}-tab`);
+        const tabBtn = document.querySelector(`[data-tab="${tabName}"]`);
+        
+        if (tabContent) tabContent.classList.add('active');
+        if (tabBtn) tabBtn.classList.add('active');
     }
 
     // ==================== ПРОФИЛЬ ====================
+    uploadAvatar() {
+        const avatarUpload = document.getElementById('avatar-upload');
+        if (avatarUpload) avatarUpload.click();
+    }
+
+    handleAvatarUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('Пожалуйста, выберите изображение');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const avatarPreview = document.getElementById('avatar-preview');
+            if (avatarPreview) {
+                avatarPreview.style.backgroundImage = `url(${e.target.result})`;
+                avatarPreview.innerHTML = '';
+            }
+            
+            this.avatarData = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
     async saveProfile() {
-        const name = document.getElementById('profile-name').value.trim();
-        const status = document.getElementById('profile-status').value.trim();
-        const allowGroupInvites = document.getElementById('allow-group-invites').checked;
+        const nameInput = document.getElementById('profile-name');
+        const statusInput = document.getElementById('profile-status');
+        const allowGroupInvites = document.getElementById('allow-group-invites');
+        
+        const name = nameInput ? nameInput.value.trim() : '';
+        const status = statusInput ? statusInput.value.trim() : '';
+        const allowInvites = allowGroupInvites ? allowGroupInvites.checked : true;
 
         if (!name) {
             alert('Введите имя');
@@ -1051,7 +1258,7 @@ class Messenger {
                     name, 
                     status: status || 'в сети',
                     avatar: this.avatarData || this.currentUser.avatar,
-                    allow_group_invites: allowGroupInvites
+                    allow_group_invites: allowInvites
                 })
             });
 
@@ -1060,9 +1267,8 @@ class Messenger {
                 this.currentUser = data.user;
                 localStorage.setItem('user', JSON.stringify(this.currentUser));
                 
-                // Обновляем аватар в интерфейсе
                 const avatarPreview = document.getElementById('avatar-preview');
-                if (this.currentUser.avatar) {
+                if (avatarPreview && this.currentUser.avatar) {
                     avatarPreview.style.backgroundImage = `url(${this.currentUser.avatar})`;
                     avatarPreview.innerHTML = '';
                 }
@@ -1074,12 +1280,13 @@ class Messenger {
             }
         } catch (error) {
             console.error('Ошибка сохранения профиля:', error);
-            alert(`Ошибка сохранения профиля: ${error.message}`);
+            alert('Ошибка сохранения профиля');
         }
     }
 
     async changeUsername() {
-        const newUsername = document.getElementById('profile-username').value.trim();
+        const usernameInput = document.getElementById('profile-username');
+        const newUsername = usernameInput ? usernameInput.value.trim() : '';
 
         if (!newUsername) {
             alert('Введите новый username');
@@ -1117,7 +1324,6 @@ class Messenger {
         }
     }
 
-
     // ==================== ТЕМА ====================
     selectTheme(element) {
         document.querySelectorAll('.theme-option').forEach(option => {
@@ -1133,12 +1339,18 @@ class Messenger {
         const activeTheme = document.querySelector('.theme-option.active');
         const theme = activeTheme ? activeTheme.dataset.theme : 'dark';
 
+        const compactMode = document.getElementById('compact-mode');
+        const roundedCorners = document.getElementById('rounded-corners');
+        const animations = document.getElementById('animations');
+        const soundsEnabled = document.getElementById('sounds-enabled');
+        const panelSize = document.getElementById('panel-size');
+
         this.userSettings.theme = theme;
-        this.userSettings.compactMode = document.getElementById('compact-mode').checked;
-        this.userSettings.roundedCorners = document.getElementById('rounded-corners').checked;
-        this.userSettings.animations = document.getElementById('animations').checked;
-        this.userSettings.soundsEnabled = document.getElementById('sounds-enabled').checked;
-        this.userSettings.panelSize = document.getElementById('panel-size').value;
+        this.userSettings.compactMode = compactMode ? compactMode.checked : false;
+        this.userSettings.roundedCorners = roundedCorners ? roundedCorners.checked : true;
+        this.userSettings.animations = animations ? animations.checked : true;
+        this.userSettings.soundsEnabled = soundsEnabled ? soundsEnabled.checked : true;
+        this.userSettings.panelSize = panelSize ? panelSize.value : 'medium';
 
         await this.saveSettings();
         this.applySettings();
@@ -1148,7 +1360,8 @@ class Messenger {
 
     // ==================== ЭФФЕКТЫ ====================
     updateOpacityPreview(value) {
-        document.getElementById('opacity-value').textContent = Math.round(value * 100) + '%';
+        const opacityValue = document.getElementById('opacity-value');
+        if (opacityValue) opacityValue.textContent = Math.round(value * 100) + '%';
         this.applyWindowOpacity(value);
     }
 
@@ -1171,16 +1384,23 @@ class Messenger {
     }
 
     updateGlowIntensityPreview(value) {
-        document.getElementById('glow-intensity-value').textContent = Math.round(value * 100) + '%';
+        const intensityValue = document.getElementById('glow-intensity-value');
+        if (intensityValue) intensityValue.textContent = Math.round(value * 100) + '%';
         this.applyGlowIntensity(value);
     }
 
     async saveEffectsSettings() {
-        const opacity = parseFloat(document.getElementById('window-opacity').value);
-        const glowColor = document.getElementById('glow-color-custom').value;
-        const glowIntensity = parseFloat(document.getElementById('glow-intensity').value);
-        const fontSize = document.getElementById('font-size').value;
-        const glowPosition = document.querySelector('input[name="glow-position"]:checked').value;
+        const opacitySlider = document.getElementById('window-opacity');
+        const glowColorCustom = document.getElementById('glow-color-custom');
+        const glowIntensitySlider = document.getElementById('glow-intensity');
+        const fontSizeSelect = document.getElementById('font-size');
+        const glowPositionRadio = document.querySelector('input[name="glow-position"]:checked');
+
+        const opacity = opacitySlider ? parseFloat(opacitySlider.value) : 0.9;
+        const glowColor = glowColorCustom ? glowColorCustom.value : '#007AFF';
+        const glowIntensity = glowIntensitySlider ? parseFloat(glowIntensitySlider.value) : 0.3;
+        const fontSize = fontSizeSelect ? fontSizeSelect.value : '14px';
+        const glowPosition = glowPositionRadio ? glowPositionRadio.value : 'back';
 
         this.userSettings.windowOpacity = opacity;
         this.userSettings.glowColor = glowColor;
@@ -1196,12 +1416,10 @@ class Messenger {
 
     // ==================== ФОН ====================
     switchBackgroundType(type) {
-        // Скрываем все опции
         document.querySelectorAll('.background-options').forEach(el => {
             el.style.display = 'none';
         });
         
-        // Показываем выбранные опции
         const optionsElement = document.getElementById(`${type}-options`);
         if (optionsElement) {
             optionsElement.style.display = 'block';
@@ -1214,7 +1432,6 @@ class Messenger {
         });
         element.classList.add('active');
         
-        // Предпросмотр
         const gradient = element.dataset.gradient;
         document.body.style.background = gradient;
         document.body.style.backgroundSize = 'cover';
@@ -1222,9 +1439,9 @@ class Messenger {
 
     selectGif(element) {
         const gifUrl = element.dataset.gif;
-        document.getElementById('gif-url').value = gifUrl;
+        const gifUrlInput = document.getElementById('gif-url');
+        if (gifUrlInput) gifUrlInput.value = gifUrl;
         
-        // Предпросмотр
         document.body.style.background = `url(${gifUrl})`;
         document.body.style.backgroundSize = 'cover';
     }
@@ -1235,7 +1452,8 @@ class Messenger {
     }
 
     async saveBackgroundSettings() {
-        const type = document.getElementById('background-type').value;
+        const backgroundType = document.getElementById('background-type');
+        const type = backgroundType ? backgroundType.value : 'gradient';
         let value = '';
 
         switch (type) {
@@ -1244,10 +1462,12 @@ class Messenger {
                 value = activeGradient ? activeGradient.dataset.gradient : 'linear-gradient(135deg, #1a1a2e, #16213e)';
                 break;
             case 'solid':
-                value = document.getElementById('solid-color').value;
+                const solidColor = document.getElementById('solid-color');
+                value = solidColor ? solidColor.value : '#1a1a2e';
                 break;
             case 'gif':
-                value = document.getElementById('gif-url').value.trim();
+                const gifUrl = document.getElementById('gif-url');
+                value = gifUrl ? gifUrl.value.trim() : '';
                 if (!value) {
                     alert('Введите URL GIF или выберите из примеров');
                     return;
@@ -1274,7 +1494,8 @@ class Messenger {
     }
 
     uploadBackground() {
-        document.getElementById('background-upload').click();
+        const backgroundUpload = document.getElementById('background-upload');
+        if (backgroundUpload) backgroundUpload.click();
     }
 
     handleBackgroundUpload(event) {
@@ -1290,12 +1511,12 @@ class Messenger {
         reader.onload = (e) => {
             this.backgroundImageData = e.target.result;
             
-            // Показываем превью
             const preview = document.getElementById('background-preview');
-            preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-            preview.style.display = 'block';
+            if (preview) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                preview.style.display = 'block';
+            }
             
-            // Предпросмотр
             document.body.style.background = `url(${e.target.result})`;
             document.body.style.backgroundSize = 'cover';
         };
@@ -1303,6 +1524,44 @@ class Messenger {
     }
 
     // ==================== СИСТЕМНЫЕ ФУНКЦИИ ====================
+    async saveSettings() {
+        try {
+            await this.apiCall('/api/settings', {
+                method: 'POST',
+                body: JSON.stringify(this.userSettings)
+            });
+        } catch (error) {
+            console.error('Ошибка сохранения настроек:', error);
+        }
+    }
+
+    logout() {
+        if (confirm('Вы уверены, что хотите выйти?')) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            this.currentUser = null;
+            this.token = null;
+            this.activeChatId = null;
+            this.chats = [];
+            this.userSettings = {};
+
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('auth-container').style.display = 'block';
+            
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            
+            if (loginForm) {
+                loginForm.reset();
+                loginForm.style.display = 'block';
+            }
+            if (registerForm) {
+                registerForm.reset();
+                registerForm.style.display = 'none';
+            }
+        }
+    }
+
     async apiCall(url, options = {}) {
         if (!this.token) {
             this.logout();
@@ -1316,7 +1575,6 @@ class Messenger {
             }
         };
 
-        // Для загрузки файлов меняем Content-Type
         if (options.body && typeof options.body === 'string' && options.body.startsWith('data:')) {
             defaultOptions.headers['Content-Type'] = 'application/octet-stream';
         }
@@ -1335,7 +1593,7 @@ class Messenger {
                     const errorData = await response.json();
                     errorMessage = errorData.error || errorMessage;
                 } catch (e) {
-                    errorMessage = await response.text() || errorMessage;
+                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
                 }
                 throw new Error(errorMessage);
             }
