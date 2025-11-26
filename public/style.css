@@ -341,23 +341,20 @@ body {
 }
 
 .new-chat-btn, .new-group-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    padding: 10px 16px;
     border: none;
+    border-radius: 15px;
     background: var(--primary-color);
     color: white;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 14px;
     transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-weight: 500;
 }
 
 .new-chat-btn:hover, .new-group-btn:hover {
     background: #0056cc;
-    transform: scale(1.1);
+    transform: scale(1.05);
     box-shadow: 0 5px 15px rgba(0, 122, 255, 0.4);
 }
 
@@ -497,9 +494,9 @@ body {
 }
 
 .control-btn {
-    padding: 10px 20px;
+    padding: 10px 16px;
     border: none;
-    border-radius: 20px;
+    border-radius: 15px;
     background: rgba(60, 60, 60, 0.7);
     color: white;
     cursor: pointer;
@@ -729,6 +726,7 @@ body {
     border: 1px solid var(--border-color);
     backdrop-filter: blur(20px);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    z-index: 100;
 }
 
 .bottom-btn {
@@ -1306,6 +1304,8 @@ body {
     color: var(--text-primary);
     font-size: 14px;
     padding: 8px 0;
+    position: relative;
+    z-index: 1;
 }
 
 .checkbox {
@@ -1320,11 +1320,14 @@ body {
     margin-right: 10px;
     position: relative;
     transition: all 0.3s ease;
+    background: var(--bg-secondary);
+    z-index: 2;
 }
 
 .checkbox:checked + .checkmark {
     background: var(--primary-color);
     border-color: var(--primary-color);
+    z-index: 3;
 }
 
 .checkbox:checked + .checkmark::after {
@@ -1335,6 +1338,7 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    z-index: 4;
 }
 
 /* Эффекты */
@@ -1460,196 +1464,7 @@ body {
     display: block;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-    .app-container {
-        height: 100vh;
-        padding: 0;
-    }
-    
-    .messenger-wrapper {
-        flex-direction: column;
-        border-radius: 0;
-        gap: 0;
-    }
-    
-    .chats-panel {
-        width: 100%;
-        height: 40%;
-        border-radius: 0;
-    }
-    
-    .messenger-container {
-        height: 60%;
-        border-radius: 0;
-    }
-    
-    .profile-settings {
-        flex-direction: column;
-    }
-    
-    .theme-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .gradient-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .glow-color-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    .large-modal {
-        width: 95%;
-        margin: 10px;
-    }
-    
-    .settings-tabs {
-        flex-wrap: wrap;
-    }
-    
-    .features-list {
-        grid-template-columns: 1fr;
-    }
-    
-    .username-group {
-        flex-direction: column;
-    }
-    
-    .bottom-panel {
-        bottom: 10px;
-        padding: 10px 15px;
-    }
-    
-    .bottom-btn {
-        padding: 8px 12px;
-        font-size: 12px;
-    }
-}
-
-/* Скроллбар */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-/* Анимации */
-.fade-in {
-    animation: fadeIn 0.5s ease;
-}
-
-.slide-in-left {
-    animation: slideInLeft 0.5s ease;
-}
-
-.slide-in-right {
-    animation: slideInRight 0.5s ease;
-}
-
-.bounce {
-    animation: bounce 0.5s ease;
-}
-
-@keyframes slideInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes bounce {
-    0%, 20%, 53%, 80%, 100% {
-        transform: translate3d(0,0,0);
-    }
-    40%, 43% {
-        transform: translate3d(0,-8px,0);
-    }
-    70% {
-        transform: translate3d(0,-4px,0);
-    }
-    90% {
-        transform: translate3d(0,-2px,0);
-    }
-}
-
-/* Отключение анимаций */
-.no-animations * {
-    animation: none !important;
-    transition: none !important;
-}
-/* Добавляем в конец файла после существующих стилей */
-
-/* Исправление нижней панели */
-.bottom-panel {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 15px;
-    background: var(--bg-secondary);
-    padding: 15px 25px;
-    border-radius: 30px;
-    border: 1px solid var(--border-color);
-    backdrop-filter: blur(20px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-    z-index: 100; /* Добавляем z-index */
-}
-
-/* Исправление галочек в настройках */
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    color: var(--text-primary);
-    font-size: 14px;
-    padding: 8px 0;
-    position: relative; /* Добавляем */
-    z-index: 1; /* Добавляем */
-}
-
-.checkmark {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--text-secondary);
-    border-radius: 4px;
-    margin-right: 10px;
-    position: relative;
-    transition: all 0.3s ease;
-    background: var(--bg-secondary); /* Добавляем фон */
-    z-index: 2; /* Увеличиваем z-index */
-}
-
-/* Улучшение для мобильных устройств */
+/* Адаптивность для мобильных устройств */
 @media (max-width: 768px) {
     .app-container {
         height: 100vh;
@@ -1734,7 +1549,7 @@ body {
     }
     
     .bottom-panel {
-        bottom: 80px; /* Поднимаем выше чтобы не мешало клавиатуре */
+        bottom: 80px;
         padding: 12px 20px;
         left: 50%;
         transform: translateX(-50%);
@@ -1747,23 +1562,19 @@ body {
         font-size: 12px;
     }
     
-    /* Улучшение для мобильного ввода */
     .message-input {
-        font-size: 16px; /* Убираем zoom в iOS */
+        font-size: 16px;
     }
     
-    /* Улучшение скролла на мобильных */
     .chats-list, .messenger-body {
         -webkit-overflow-scrolling: touch;
     }
     
-    /* Адаптивные модальные окна */
     .modal-content {
         width: 95%;
         max-height: 85vh;
     }
     
-    /* Улучшение табов в настройках */
     .settings-tabs {
         overflow-x: auto;
         flex-wrap: nowrap;
@@ -1840,24 +1651,6 @@ body {
     }
 }
 
-/* Убираем эмодзи из некоторых элементов */
-.auth-title::before {
-    content: "💬 ";
-}
-
-.chats-title::before {
-    content: "💭 ";
-}
-
-/* Исправляем z-index для модальных окон */
-.modal {
-    z-index: 1000;
-}
-
-.modal-content {
-    z-index: 1001;
-}
-
 /* Улучшаем видимость галочек */
 .checkbox:checked + .checkmark {
     background: var(--primary-color);
@@ -1900,4 +1693,83 @@ body {
     border-radius: 8px;
     font-size: 13px;
     text-align: center;
+}
+
+/* Скроллбар */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Анимации */
+.fade-in {
+    animation: fadeIn 0.5s ease;
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.5s ease;
+}
+
+.slide-in-right {
+    animation: slideInRight 0.5s ease;
+}
+
+.bounce {
+    animation: bounce 0.5s ease;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 53%, 80%, 100% {
+        transform: translate3d(0,0,0);
+    }
+    40%, 43% {
+        transform: translate3d(0,-8px,0);
+    }
+    70% {
+        transform: translate3d(0,-4px,0);
+    }
+    90% {
+        transform: translate3d(0,-2px,0);
+    }
+}
+
+/* Отключение анимаций */
+.no-animations * {
+    animation: none !important;
+    transition: none !important;
 }
