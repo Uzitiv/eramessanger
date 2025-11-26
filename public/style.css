@@ -11,6 +11,14 @@
     --message-font-size: 14px;
     --glow-color: #007AFF;
     --glow-intensity: 0.3;
+    --glow-position: back;
+    --panel-size: medium;
+    --border-radius: 20px;
+}
+
+/* iOS-like анимации */
+* {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Темы */
@@ -102,6 +110,61 @@
     --border-color: rgba(255, 149, 0, 0.3);
 }
 
+/* Размеры панелей */
+:root[data-panel-size="small"] {
+    --panel-width: 280px;
+    --chat-height: 70px;
+    --font-size-small: 12px;
+}
+
+:root[data-panel-size="medium"] {
+    --panel-width: 320px;
+    --chat-height: 80px;
+    --font-size-small: 14px;
+}
+
+:root[data-panel-size="large"] {
+    --panel-width: 360px;
+    --chat-height: 90px;
+    --font-size-small: 16px;
+}
+
+/* Стили свечения */
+.chats-panel.glow-back, .messenger-container.glow-back {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 
+                0 0 30px color-mix(in srgb, var(--glow-color) calc(var(--glow-intensity) * 100%), transparent);
+}
+
+.chats-panel.glow-front, .messenger-container.glow-front {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    border: 2px solid color-mix(in srgb, var(--glow-color) calc(var(--glow-intensity) * 100%), transparent);
+}
+
+/* Компактный режим */
+.compact-mode .chat-item {
+    padding: 10px 15px;
+    margin-bottom: 5px;
+}
+
+.compact-mode .chat-avatar {
+    width: 40px;
+    height: 40px;
+}
+
+.compact-mode .message {
+    padding: 10px 15px;
+    margin-bottom: 8px;
+}
+
+/* Закругленные углы */
+.rounded-corners {
+    --border-radius: 20px;
+}
+
+.no-rounded-corners {
+    --border-radius: 8px;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -129,7 +192,7 @@ body {
 
 .auth-box {
     background: var(--bg-primary);
-    border-radius: 20px;
+    border-radius: var(--border-radius);
     padding: 30px;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(20px);
@@ -225,21 +288,6 @@ body {
     display: none;
 }
 
-.demo-accounts {
-    background: rgba(0, 122, 255, 0.1);
-    padding: 15px;
-    border-radius: 12px;
-    margin-top: 15px;
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 14px;
-    border: 1px solid rgba(0, 122, 255, 0.2);
-}
-
-.demo-accounts p {
-    margin: 5px 0;
-}
-
 /* Основной интерфейс */
 .app-container {
     width: 100%;
@@ -255,35 +303,26 @@ body {
 }
 
 .chats-panel {
-    width: 320px;
+    width: var(--panel-width);
     background: var(--bg-secondary);
-    border-radius: 20px;
+    border-radius: var(--border-radius);
     backdrop-filter: blur(20px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
 }
 
 .messenger-container {
     flex: 1;
     background: var(--bg-primary);
-    border-radius: 20px;
+    border-radius: var(--border-radius);
     backdrop-filter: blur(20px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-}
-
-/* Свечение */
-.chats-panel, .messenger-container {
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 
-                0 0 30px color-mix(in srgb, var(--glow-color) calc(var(--glow-intensity) * 100%), transparent);
+    position: relative;
 }
 
 .chats-header {
@@ -301,7 +340,7 @@ body {
     font-size: 18px;
 }
 
-.new-chat-btn {
+.new-chat-btn, .new-group-btn {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -316,7 +355,7 @@ body {
     justify-content: center;
 }
 
-.new-chat-btn:hover {
+.new-chat-btn:hover, .new-group-btn:hover {
     background: #0056cc;
     transform: scale(1.1);
     box-shadow: 0 5px 15px rgba(0, 122, 255, 0.4);
@@ -369,6 +408,7 @@ body {
     color: var(--text-primary);
     border: 1px solid transparent;
     position: relative;
+    height: var(--chat-height);
 }
 
 .chat-item:hover {
@@ -453,13 +493,13 @@ body {
 .header-controls {
     display: flex;
     gap: 10px;
+    align-items: center;
 }
 
 .control-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    padding: 10px 20px;
     border: none;
+    border-radius: 20px;
     background: rgba(60, 60, 60, 0.7);
     color: white;
     cursor: pointer;
@@ -467,12 +507,21 @@ body {
     justify-content: center;
     align-items: center;
     transition: all 0.3s ease;
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 500;
 }
 
 .control-btn:hover {
     background: rgba(80, 80, 80, 0.9);
-    transform: scale(1.1);
+    transform: scale(1.05);
+}
+
+.logout-btn {
+    background: #ff3b30;
+}
+
+.logout-btn:hover {
+    background: #d70015;
 }
 
 .messenger-body {
@@ -563,12 +612,56 @@ body {
     text-align: right;
 }
 
+.attachment {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.attachment-icon {
+    font-size: 18px;
+}
+
+.attachment-name {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
 .messenger-footer {
     padding: 20px;
     border-top: 1px solid var(--border-color);
     display: flex;
     gap: 12px;
     align-items: center;
+}
+
+.footer-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.footer-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(60, 60, 60, 0.7);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.footer-btn:hover {
+    background: rgba(80, 80, 80, 0.9);
+    transform: scale(1.1);
 }
 
 .message-input {
@@ -622,6 +715,43 @@ body {
     transform: none;
 }
 
+/* Нижняя панель */
+.bottom-panel {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    background: var(--bg-secondary);
+    padding: 15px 25px;
+    border-radius: 30px;
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.bottom-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 20px;
+    background: rgba(60, 60, 60, 0.7);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bottom-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: scale(1.05);
+}
+
 /* Модальные окна */
 .modal {
     display: none;
@@ -655,7 +785,7 @@ body {
 
 .modal-content {
     background: var(--bg-primary);
-    border-radius: 20px;
+    border-radius: var(--border-radius);
     padding: 25px;
     width: 450px;
     max-width: 90%;
@@ -804,6 +934,33 @@ body {
 .user-username {
     font-size: 13px;
     opacity: 0.7;
+}
+
+/* Выбранные пользователи в группе */
+.selected-users {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.selected-user {
+    background: var(--primary-color);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.remove-user {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
 }
 
 /* Настройки */
@@ -1039,6 +1196,53 @@ body {
     transform: scale(1.2);
 }
 
+/* Радио кнопки */
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 14px;
+    padding: 8px 0;
+}
+
+.radio-label input[type="radio"] {
+    display: none;
+}
+
+.radiomark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--text-secondary);
+    border-radius: 50%;
+    margin-right: 10px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.radio-label input[type="radio"]:checked + .radiomark {
+    border-color: var(--primary-color);
+}
+
+.radio-label input[type="radio"]:checked + .radiomark::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background: var(--primary-color);
+    border-radius: 50%;
+}
+
 /* Темы */
 .theme-settings {
     padding: 10px 0;
@@ -1101,6 +1305,7 @@ body {
     cursor: pointer;
     color: var(--text-primary);
     font-size: 14px;
+    padding: 8px 0;
 }
 
 .checkbox {
@@ -1311,6 +1516,16 @@ body {
     .username-group {
         flex-direction: column;
     }
+    
+    .bottom-panel {
+        bottom: 10px;
+        padding: 10px 15px;
+    }
+    
+    .bottom-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
 }
 
 /* Скроллбар */
@@ -1330,4 +1545,64 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
+}
+
+/* Анимации */
+.fade-in {
+    animation: fadeIn 0.5s ease;
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.5s ease;
+}
+
+.slide-in-right {
+    animation: slideInRight 0.5s ease;
+}
+
+.bounce {
+    animation: bounce 0.5s ease;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 53%, 80%, 100% {
+        transform: translate3d(0,0,0);
+    }
+    40%, 43% {
+        transform: translate3d(0,-8px,0);
+    }
+    70% {
+        transform: translate3d(0,-4px,0);
+    }
+    90% {
+        transform: translate3d(0,-2px,0);
+    }
+}
+
+/* Отключение анимаций */
+.no-animations * {
+    animation: none !important;
+    transition: none !important;
 }
