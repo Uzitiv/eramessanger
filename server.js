@@ -204,9 +204,11 @@ app.post('/api/login', (req, res) => {
   });
 });
 
-// Поиск пользователей - ИСПРАВЛЕННЫЙ МЕТОД
+// Поиск пользователей - ИСПРАВЛЕННЫЙ
 app.get('/api/users/search', authenticateToken, (req, res) => {
   const { query } = req.query;
+
+  console.log('Поиск пользователей:', query);
 
   if (!query || query.trim().length < 2) {
     return res.status(400).json({ error: 'Запрос должен содержать минимум 2 символа' });
@@ -214,18 +216,29 @@ app.get('/api/users/search', authenticateToken, (req, res) => {
 
   const searchQuery = `%${query.trim()}%`;
   
-  db.all(`SELECT id, username, name, status, avatar, allow_group_invites FROM users 
-          WHERE (username LIKE ? OR name LIKE ?) AND id != ? 
-          ORDER BY 
-            CASE WHEN username LIKE ? THEN 1 ELSE 2 END,
-            name ASC`, 
-    [searchQuery, searchQuery, req.user.id, searchQuery], (err, users) => {
-      if (err) {
-        console.error('Search error:', err);
-        return res.status(500).json({ error: 'Ошибка поиска' });
-      }
-      res.json(users);
-    });
+  const sql = `
+    SELECT id, username, name, status, avatar, allow_group_invites 
+    FROM users 
+    WHERE (username LIKE ? OR name LIKE ?) 
+      AND id != ?
+    ORDER BY 
+      CASE 
+        WHEN username LIKE ? THEN 1 
+        WHEN name LIKE ? THEN 2 
+        ELSE 3 
+      END,
+      name ASC
+  `;
+  
+  db.all(sql, [searchQuery, searchQuery, req.user.id, searchQuery, searchQuery], (err, users) => {
+    if (err) {
+      console.error('Search error:', err);
+      return res.status(500).json({ error: 'Ошибка поиска' });
+    }
+    
+    console.log('Найдено пользователей:', users.length);
+    res.json(users);
+  });
 });
 
 // Получение списка чатов
