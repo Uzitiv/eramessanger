@@ -24,22 +24,11 @@ class Messenger {
         this.checkAuth();
         this.createAudioElements();
         this.setupMobileView();
-        
-        setTimeout(() => this.checkButtons(), 100);
-    }
-
-    checkButtons() {
-        console.log('Проверка кнопок:');
-        console.log('new-chat-btn:', document.getElementById('new-chat-btn'));
-        console.log('find-users-btn:', document.getElementById('find-users-btn'));
-        console.log('search-bottom-btn:', document.getElementById('search-bottom-btn'));
     }
 
     setupMobileView() {
         if (this.isMobile) {
             document.body.classList.add('mobile-view');
-            const bottomPanel = document.querySelector('.bottom-panel');
-            if (bottomPanel) bottomPanel.style.display = 'none';
         }
     }
 
@@ -74,11 +63,10 @@ class Messenger {
         // Основные кнопки
         this.bindButton('new-chat-btn', () => this.showSearchModal());
         this.bindButton('find-users-btn', () => this.showSearchModal());
-        this.bindButton('search-bottom-btn', () => this.showSearchModal());
         this.bindButton('new-group-btn', () => this.showGroupModal());
+        this.bindButton('settings-btn', () => this.showSettingsModal());
         this.bindButton('close-search-modal', () => this.hideSearchModal());
         this.bindButton('send-btn', () => this.sendMessage());
-        this.bindButton('settings-bottom-btn', () => this.showSettingsModal());
         this.bindButton('logout-btn', () => this.logout());
         this.bindButton('attach-btn', () => this.uploadFile());
         this.bindButton('close-settings-modal', () => this.hideSettingsModal());
@@ -91,12 +79,15 @@ class Messenger {
         this.bindButton('save-effects-btn', () => this.saveEffectsSettings());
         this.bindButton('save-background-btn', () => this.saveBackgroundSettings());
         this.bindButton('upload-background-btn', () => this.uploadBackground());
+        this.bindButton('test-gif-btn', () => this.testGifUrl());
 
         // Кнопки правой панели
         this.bindButton('right-panel-settings', () => this.showSettingsModal());
         this.bindButton('right-panel-logout', () => this.logout());
         this.bindButton('right-panel-new-chat', () => this.showSearchModal());
         this.bindButton('right-panel-new-group', () => this.showGroupModal());
+        this.bindButton('right-panel-theme', () => this.switchToThemeTab());
+        this.bindButton('right-panel-profile', () => this.switchToProfileTab());
 
         // Поиск
         document.getElementById('user-search-input').addEventListener('input', (e) => this.handleSearchInput(e.target.value));
@@ -201,6 +192,7 @@ class Messenger {
                 this.showApp();
                 await this.loadChats();
                 await this.loadUserSettings();
+                this.updateRightPanel();
                 this.hideError('login-error');
                 this.playSound(this.clickSound);
             } else {
@@ -245,6 +237,7 @@ class Messenger {
                 this.showApp();
                 await this.loadChats();
                 await this.loadUserSettings();
+                this.updateRightPanel();
                 this.hideError('register-error');
                 this.playSound(this.clickSound);
             } else {
@@ -283,6 +276,7 @@ class Messenger {
                 this.showApp();
                 this.loadChats();
                 this.loadUserSettings();
+                this.updateRightPanel();
             } catch (e) {
                 console.error('Auth error:', e);
                 this.logout();
@@ -296,6 +290,27 @@ class Messenger {
         
         if (this.isMobile) {
             this.setupMobileNavigation();
+        }
+    }
+
+    updateRightPanel() {
+        if (this.currentUser) {
+            const panelAvatar = document.getElementById('panel-avatar');
+            const panelUserName = document.getElementById('panel-user-name');
+            const panelUserStatus = document.getElementById('panel-user-status');
+
+            if (panelUserName) panelUserName.textContent = this.currentUser.name;
+            if (panelUserStatus) panelUserStatus.textContent = this.currentUser.status || 'в сети';
+
+            if (panelAvatar) {
+                if (this.currentUser.avatar) {
+                    panelAvatar.style.backgroundImage = `url(${this.currentUser.avatar})`;
+                    panelAvatar.innerHTML = '';
+                } else {
+                    panelAvatar.style.backgroundImage = 'none';
+                    panelAvatar.innerHTML = '<div class="avatar-placeholder">👤</div>';
+                }
+            }
         }
     }
 
@@ -1018,7 +1033,14 @@ class Messenger {
     }
 
     applyTheme(theme) {
-        document.body.classList.remove('theme-dark', 'theme-light', 'theme-gray', 'theme-dark-gray', 'theme-blue', 'theme-purple', 'theme-green', 'theme-orange');
+        const themeClasses = [
+            'theme-dark', 'theme-light', 'theme-gray', 'theme-dark-gray', 
+            'theme-blue', 'theme-purple', 'theme-green', 'theme-orange',
+            'theme-pink', 'theme-red', 'theme-teal', 'theme-cyan',
+            'theme-indigo', 'theme-brown', 'theme-deep-purple'
+        ];
+        
+        document.body.classList.remove(...themeClasses);
         document.body.classList.add(`theme-${theme}`);
     }
 
@@ -1168,6 +1190,35 @@ class Messenger {
             if (backgroundType) {
                 backgroundType.value = this.userSettings.background.type;
                 this.switchBackgroundType(this.userSettings.background.type);
+                
+                // Устанавливаем активные элементы в зависимости от типа фона
+                switch (this.userSettings.background.type) {
+                    case 'gradient':
+                        document.querySelectorAll('.gradient-option').forEach(opt => {
+                            opt.classList.remove('active');
+                            if (opt.dataset.gradient === this.userSettings.background.value) {
+                                opt.classList.add('active');
+                            }
+                        });
+                        break;
+                    case 'solid':
+                        const solidColor = document.getElementById('solid-color');
+                        if (solidColor) solidColor.value = this.userSettings.background.value;
+                        break;
+                    case 'gif':
+                        document.querySelectorAll('.gif-option').forEach(opt => {
+                            opt.classList.remove('active');
+                            if (opt.dataset.gif === this.userSettings.background.value) {
+                                opt.classList.add('active');
+                            }
+                        });
+                        const gifUrl = document.getElementById('gif-url');
+                        if (gifUrl) gifUrl.value = this.userSettings.background.value;
+                        break;
+                    case 'image':
+                        // Для изображений просто применяем фон
+                        break;
+                }
             }
         }
     }
@@ -1183,6 +1234,16 @@ class Messenger {
     hideSettingsModal() {
         const modal = document.getElementById('settings-modal');
         if (modal) modal.classList.remove('active');
+    }
+
+    switchToThemeTab() {
+        this.showSettingsModal();
+        this.switchSettingsTab('theme');
+    }
+
+    switchToProfileTab() {
+        this.showSettingsModal();
+        this.switchSettingsTab('profile');
     }
 
     switchSettingsTab(tabName) {
@@ -1257,6 +1318,7 @@ class Messenger {
                 const data = await response.json();
                 this.currentUser = data.user;
                 localStorage.setItem('user', JSON.stringify(this.currentUser));
+                this.updateRightPanel();
                 
                 const avatarPreview = document.getElementById('avatar-preview');
                 if (avatarPreview && this.currentUser.avatar) {
@@ -1306,6 +1368,7 @@ class Messenger {
                 this.token = data.token;
                 localStorage.setItem('token', this.token);
                 localStorage.setItem('user', JSON.stringify(this.currentUser));
+                this.updateRightPanel();
                 alert('Username успешно изменен!');
                 this.playSound(this.clickSound);
             }
@@ -1413,6 +1476,12 @@ class Messenger {
             opt.classList.remove('active');
         });
         element.classList.add('active');
+        
+        const gradient = element.dataset.gradient;
+        this.applyBackground({
+            type: 'gradient',
+            value: gradient
+        });
     }
 
     selectGif(element) {
@@ -1420,11 +1489,51 @@ class Messenger {
             opt.classList.remove('active');
         });
         element.classList.add('active');
+        
+        const gifUrl = element.dataset.gif;
+        this.applyBackground({
+            type: 'gif',
+            value: gifUrl
+        });
+        
+        // Обновляем поле URL
+        const gifUrlInput = document.getElementById('gif-url');
+        if (gifUrlInput) gifUrlInput.value = gifUrl;
+    }
+
+    async testGifUrl() {
+        const gifUrlInput = document.getElementById('gif-url');
+        const url = gifUrlInput ? gifUrlInput.value.trim() : '';
+        
+        if (!url) {
+            alert('Введите URL GIF');
+            return;
+        }
+
+        try {
+            // Создаем изображение для проверки
+            const img = new Image();
+            img.onload = () => {
+                this.applyBackground({
+                    type: 'gif',
+                    value: url
+                });
+                alert('GIF успешно загружен!');
+            };
+            img.onerror = () => {
+                alert('Не удалось загрузить GIF. Проверьте URL.');
+            };
+            img.src = url;
+        } catch (error) {
+            alert('Ошибка при проверке GIF: ' + error.message);
+        }
     }
 
     previewSolidColor(color) {
-        document.body.style.background = color;
-        document.body.style.backgroundSize = 'cover';
+        this.applyBackground({
+            type: 'solid',
+            value: color
+        });
     }
 
     async saveBackgroundSettings() {
@@ -1442,10 +1551,15 @@ class Messenger {
                 value = solidColor ? solidColor.value : '#1a1a2e';
                 break;
             case 'gif':
-                const activeGif = document.querySelector('.gif-option.active');
-                value = activeGif ? activeGif.dataset.gif : '';
+                const gifUrlInput = document.getElementById('gif-url');
+                value = gifUrlInput ? gifUrlInput.value.trim() : '';
                 if (!value) {
-                    alert('Выберите GIF из примеров');
+                    // Проверяем выбранные GIF из примеров
+                    const activeGif = document.querySelector('.gif-option.active');
+                    value = activeGif ? activeGif.dataset.gif : '';
+                }
+                if (!value) {
+                    alert('Выберите GIF из примеров или введите URL');
                     return;
                 }
                 break;
@@ -1486,6 +1600,13 @@ class Messenger {
         const reader = new FileReader();
         reader.onload = (e) => {
             this.backgroundImageData = e.target.result;
+            
+            const preview = document.getElementById('background-preview');
+            if (preview) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                preview.style.display = 'block';
+            }
+            
             this.applyBackground({
                 type: 'image',
                 value: this.backgroundImageData
