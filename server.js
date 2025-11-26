@@ -1,4 +1,4 @@
-const express = require('express');
+сconst express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
@@ -545,6 +545,8 @@ app.put('/api/profile', authenticateToken, (req, res) => {
     });
 });
 
+// ... предыдущий код без изменений ...
+
 // Смена username - ИСПРАВЛЕННЫЙ МЕТОД
 app.put('/api/profile/username', authenticateToken, (req, res) => {
   const { username } = req.body;
@@ -609,6 +611,8 @@ app.put('/api/profile/username', authenticateToken, (req, res) => {
     });
   });
 });
+
+// ... остальной код без изменений ...
 
 // Получение настроек
 app.get('/api/settings', authenticateToken, (req, res) => {
