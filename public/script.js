@@ -145,7 +145,6 @@ class Messenger {
         const element = document.getElementById(id);
         if (element) {
             element.addEventListener('click', handler);
-            console.log(`Кнопка ${id} привязана`);
         } else {
             console.warn(`Элемент с id "${id}" не найден`);
         }
@@ -1056,10 +1055,33 @@ class Messenger {
 
     applyGlowColor(color) {
         document.documentElement.style.setProperty('--glow-color', color);
+        
+        // Обновляем активную кнопку цвета
+        document.querySelectorAll('.glow-color-option').forEach(option => {
+            option.classList.remove('active');
+            if (option.dataset.color === color) {
+                option.classList.add('active');
+            }
+        });
+        
+        // Обновляем кастомный цвет
+        const customColor = document.getElementById('glow-color-custom');
+        if (customColor) customColor.value = color;
     }
 
     applyGlowPosition(position) {
         document.documentElement.style.setProperty('--glow-position', position);
+        
+        const chatsPanel = document.querySelector('.chats-panel');
+        const messengerContainer = document.querySelector('.messenger-container');
+        const rightPanel = document.querySelector('.right-panel');
+        
+        [chatsPanel, messengerContainer, rightPanel].forEach(panel => {
+            if (panel) {
+                panel.classList.remove('glow-back', 'glow-front');
+                panel.classList.add(`glow-${position}`);
+            }
+        });
     }
 
     applyGlowIntensity(intensity) {
@@ -1090,9 +1112,22 @@ class Messenger {
                 body.classList.add('bg-solid');
                 break;
             case 'gif':
-                body.style.background = `url(${background.value})`;
-                body.style.backgroundSize = 'cover';
-                body.classList.add('bg-gif');
+                // Создаем изображение для проверки загрузки GIF
+                const img = new Image();
+                img.onload = () => {
+                    body.style.background = `url(${background.value})`;
+                    body.style.backgroundSize = 'cover';
+                    body.classList.add('bg-gif');
+                };
+                img.onerror = () => {
+                    console.error('Не удалось загрузить GIF фон');
+                    alert('Не удалось загрузить GIF. Проверьте URL.');
+                    // Возвращаемся к градиенту по умолчанию
+                    body.style.background = 'linear-gradient(135deg, #1a1a2e, #16213e)';
+                    body.style.backgroundSize = 'cover';
+                    body.classList.add('bg-gradient-custom');
+                };
+                img.src = background.value;
                 break;
             case 'image':
                 body.style.background = `url(${background.value})`;
@@ -1153,559 +1188,4 @@ class Messenger {
 
         if (this.userSettings.glowPosition) {
             this.applyGlowPosition(this.userSettings.glowPosition);
-        }
-
-        if (this.userSettings.glowIntensity !== undefined) {
-            const intensitySlider = document.getElementById('glow-intensity');
-            const intensityValue = document.getElementById('glow-intensity-value');
-            if (intensitySlider) intensitySlider.value = this.userSettings.glowIntensity;
-            if (intensityValue) intensityValue.textContent = Math.round(this.userSettings.glowIntensity * 100) + '%';
-        }
-
-        if (this.userSettings.fontSize) {
-            const fontSize = document.getElementById('font-size');
-            if (fontSize) fontSize.value = this.userSettings.fontSize;
-        }
-
-        // Чекбоксы
-        const compactMode = document.getElementById('compact-mode');
-        const roundedCorners = document.getElementById('rounded-corners');
-        const animations = document.getElementById('animations');
-        const soundsEnabled = document.getElementById('sounds-enabled');
-        
-        if (compactMode) compactMode.checked = !!this.userSettings.compactMode;
-        if (roundedCorners) roundedCorners.checked = this.userSettings.roundedCorners !== false;
-        if (animations) animations.checked = this.userSettings.animations !== false;
-        if (soundsEnabled) soundsEnabled.checked = this.userSettings.soundsEnabled !== false;
-
-        // Размер панелей
-        if (this.userSettings.panelSize) {
-            const panelSize = document.getElementById('panel-size');
-            if (panelSize) panelSize.value = this.userSettings.panelSize;
-        }
-
-        // Фон
-        if (this.userSettings.background) {
-            const backgroundType = document.getElementById('background-type');
-            if (backgroundType) {
-                backgroundType.value = this.userSettings.background.type;
-                this.switchBackgroundType(this.userSettings.background.type);
-                
-                // Устанавливаем активные элементы в зависимости от типа фона
-                switch (this.userSettings.background.type) {
-                    case 'gradient':
-                        document.querySelectorAll('.gradient-option').forEach(opt => {
-                            opt.classList.remove('active');
-                            if (opt.dataset.gradient === this.userSettings.background.value) {
-                                opt.classList.add('active');
-                            }
-                        });
-                        break;
-                    case 'solid':
-                        const solidColor = document.getElementById('solid-color');
-                        if (solidColor) solidColor.value = this.userSettings.background.value;
-                        break;
-                    case 'gif':
-                        document.querySelectorAll('.gif-option').forEach(opt => {
-                            opt.classList.remove('active');
-                            if (opt.dataset.gif === this.userSettings.background.value) {
-                                opt.classList.add('active');
-                            }
-                        });
-                        const gifUrl = document.getElementById('gif-url');
-                        if (gifUrl) gifUrl.value = this.userSettings.background.value;
-                        break;
-                    case 'image':
-                        // Для изображений просто применяем фон
-                        break;
-                }
-            }
-        }
-    }
-
-    showSettingsModal() {
-        const modal = document.getElementById('settings-modal');
-        if (modal) {
-            modal.classList.add('active');
-            this.populateSettingsForm();
-        }
-    }
-
-    hideSettingsModal() {
-        const modal = document.getElementById('settings-modal');
-        if (modal) modal.classList.remove('active');
-    }
-
-    switchToThemeTab() {
-        this.showSettingsModal();
-        this.switchSettingsTab('theme');
-    }
-
-    switchToProfileTab() {
-        this.showSettingsModal();
-        this.switchSettingsTab('profile');
-    }
-
-    switchSettingsTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-
-        const tabContent = document.getElementById(`${tabName}-tab`);
-        const tabBtn = document.querySelector(`[data-tab="${tabName}"]`);
-        
-        if (tabContent) tabContent.classList.add('active');
-        if (tabBtn) tabBtn.classList.add('active');
-    }
-
-    // ==================== ПРОФИЛЬ ====================
-    uploadAvatar() {
-        const avatarUpload = document.getElementById('avatar-upload');
-        if (avatarUpload) avatarUpload.click();
-    }
-
-    handleAvatarUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        if (!file.type.startsWith('image/')) {
-            alert('Пожалуйста, выберите изображение');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const avatarPreview = document.getElementById('avatar-preview');
-            if (avatarPreview) {
-                avatarPreview.style.backgroundImage = `url(${e.target.result})`;
-                avatarPreview.innerHTML = '';
-            }
-            
-            this.avatarData = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-
-    async saveProfile() {
-        const nameInput = document.getElementById('profile-name');
-        const statusInput = document.getElementById('profile-status');
-        const allowGroupInvites = document.getElementById('allow-group-invites');
-        
-        const name = nameInput ? nameInput.value.trim() : '';
-        const status = statusInput ? statusInput.value.trim() : '';
-        const allowInvites = allowGroupInvites ? allowGroupInvites.checked : true;
-
-        if (!name) {
-            alert('Введите имя');
-            return;
-        }
-
-        try {
-            const response = await this.apiCall('/api/profile', {
-                method: 'PUT',
-                body: JSON.stringify({ 
-                    name, 
-                    status: status || 'в сети',
-                    avatar: this.avatarData || this.currentUser.avatar,
-                    allow_group_invites: allowInvites
-                })
-            });
-
-            if (response) {
-                const data = await response.json();
-                this.currentUser = data.user;
-                localStorage.setItem('user', JSON.stringify(this.currentUser));
-                this.updateRightPanel();
-                
-                const avatarPreview = document.getElementById('avatar-preview');
-                if (avatarPreview && this.currentUser.avatar) {
-                    avatarPreview.style.backgroundImage = `url(${this.currentUser.avatar})`;
-                    avatarPreview.innerHTML = '';
-                }
-                
-                this.hideSettingsModal();
-                await this.loadChats();
-                alert('Профиль успешно обновлен!');
-                this.playSound(this.clickSound);
-            }
-        } catch (error) {
-            console.error('Ошибка сохранения профиля:', error);
-            alert('Ошибка сохранения профиля');
-        }
-    }
-
-    async changeUsername() {
-        const usernameInput = document.getElementById('profile-username');
-        const newUsername = usernameInput ? usernameInput.value.trim() : '';
-
-        if (!newUsername) {
-            alert('Введите новый username');
-            return;
-        }
-
-        if (newUsername === this.currentUser.username) {
-            alert('Это ваш текущий username');
-            return;
-        }
-
-        if (newUsername.length < 3) {
-            alert('Username должен содержать минимум 3 символа');
-            return;
-        }
-
-        try {
-            const response = await this.apiCall('/api/profile/username', {
-                method: 'PUT',
-                body: JSON.stringify({ username: newUsername })
-            });
-
-            if (response) {
-                const data = await response.json();
-                this.currentUser = data.user;
-                this.token = data.token;
-                localStorage.setItem('token', this.token);
-                localStorage.setItem('user', JSON.stringify(this.currentUser));
-                this.updateRightPanel();
-                alert('Username успешно изменен!');
-                this.playSound(this.clickSound);
-            }
-        } catch (error) {
-            console.error('Ошибка смены username:', error);
-            alert(`Ошибка смены username: ${error.message}`);
-        }
-    }
-
-    // ==================== ТЕМА ====================
-    selectTheme(element) {
-        document.querySelectorAll('.theme-option').forEach(option => {
-            option.classList.remove('active');
-        });
-        element.classList.add('active');
-    }
-
-    async saveThemeSettings() {
-        const activeTheme = document.querySelector('.theme-option.active');
-        const theme = activeTheme ? activeTheme.dataset.theme : 'dark';
-
-        const compactMode = document.getElementById('compact-mode');
-        const roundedCorners = document.getElementById('rounded-corners');
-        const animations = document.getElementById('animations');
-        const soundsEnabled = document.getElementById('sounds-enabled');
-        const panelSize = document.getElementById('panel-size');
-
-        this.userSettings.theme = theme;
-        this.userSettings.compactMode = compactMode ? compactMode.checked : false;
-        this.userSettings.roundedCorners = roundedCorners ? roundedCorners.checked : true;
-        this.userSettings.animations = animations ? animations.checked : true;
-        this.userSettings.soundsEnabled = soundsEnabled ? soundsEnabled.checked : true;
-        this.userSettings.panelSize = panelSize ? panelSize.value : 'medium';
-
-        await this.saveSettings();
-        this.applySettings();
-        alert('Настройки успешно применены!');
-        this.playSound(this.clickSound);
-    }
-
-    // ==================== ЭФФЕКТЫ ====================
-    updateOpacityPreview(value) {
-        const opacityValue = document.getElementById('opacity-value');
-        if (opacityValue) opacityValue.textContent = Math.round(value * 100) + '%';
-        this.applyWindowOpacity(parseFloat(value));
-    }
-
-    selectGlowColor(element) {
-        document.querySelectorAll('.glow-color-option').forEach(option => {
-            option.classList.remove('active');
-        });
-        element.classList.add('active');
-        
-        const color = element.dataset.color;
-        this.applyGlowColor(color);
-    }
-
-    selectCustomGlowColor(color) {
-        this.applyGlowColor(color);
-    }
-
-    selectGlowPosition(position) {
-        this.applyGlowPosition(position);
-    }
-
-    updateGlowIntensityPreview(value) {
-        const intensityValue = document.getElementById('glow-intensity-value');
-        if (intensityValue) intensityValue.textContent = Math.round(value * 100) + '%';
-        this.applyGlowIntensity(parseFloat(value));
-    }
-
-    async saveEffectsSettings() {
-        const opacitySlider = document.getElementById('window-opacity');
-        const glowColorCustom = document.getElementById('glow-color-custom');
-        const glowIntensitySlider = document.getElementById('glow-intensity');
-        const fontSizeSelect = document.getElementById('font-size');
-        const glowPositionRadio = document.querySelector('input[name="glow-position"]:checked');
-
-        this.userSettings.windowOpacity = opacitySlider ? parseFloat(opacitySlider.value) : 0.9;
-        this.userSettings.glowColor = glowColorCustom ? glowColorCustom.value : '#007AFF';
-        this.userSettings.glowIntensity = glowIntensitySlider ? parseFloat(glowIntensitySlider.value) : 0.3;
-        this.userSettings.fontSize = fontSizeSelect ? fontSizeSelect.value : '14px';
-        this.userSettings.glowPosition = glowPositionRadio ? glowPositionRadio.value : 'back';
-
-        await this.saveSettings();
-        this.applySettings();
-        alert('Эффекты успешно применены!');
-        this.playSound(this.clickSound);
-    }
-
-    // ==================== ФОН ====================
-    switchBackgroundType(type) {
-        document.querySelectorAll('.background-options').forEach(el => {
-            el.style.display = 'none';
-        });
-        
-        const optionsElement = document.getElementById(`${type}-options`);
-        if (optionsElement) {
-            optionsElement.style.display = 'block';
-        }
-    }
-
-    selectGradient(element) {
-        document.querySelectorAll('.gradient-option').forEach(opt => {
-            opt.classList.remove('active');
-        });
-        element.classList.add('active');
-        
-        const gradient = element.dataset.gradient;
-        this.applyBackground({
-            type: 'gradient',
-            value: gradient
-        });
-    }
-
-    selectGif(element) {
-        document.querySelectorAll('.gif-option').forEach(opt => {
-            opt.classList.remove('active');
-        });
-        element.classList.add('active');
-        
-        const gifUrl = element.dataset.gif;
-        this.applyBackground({
-            type: 'gif',
-            value: gifUrl
-        });
-        
-        // Обновляем поле URL
-        const gifUrlInput = document.getElementById('gif-url');
-        if (gifUrlInput) gifUrlInput.value = gifUrl;
-    }
-
-    async testGifUrl() {
-        const gifUrlInput = document.getElementById('gif-url');
-        const url = gifUrlInput ? gifUrlInput.value.trim() : '';
-        
-        if (!url) {
-            alert('Введите URL GIF');
-            return;
-        }
-
-        try {
-            // Создаем изображение для проверки
-            const img = new Image();
-            img.onload = () => {
-                this.applyBackground({
-                    type: 'gif',
-                    value: url
-                });
-                alert('GIF успешно загружен!');
-            };
-            img.onerror = () => {
-                alert('Не удалось загрузить GIF. Проверьте URL.');
-            };
-            img.src = url;
-        } catch (error) {
-            alert('Ошибка при проверке GIF: ' + error.message);
-        }
-    }
-
-    previewSolidColor(color) {
-        this.applyBackground({
-            type: 'solid',
-            value: color
-        });
-    }
-
-    async saveBackgroundSettings() {
-        const backgroundType = document.getElementById('background-type');
-        const type = backgroundType ? backgroundType.value : 'gradient';
-        
-        let value = '';
-        switch (type) {
-            case 'gradient':
-                const activeGradient = document.querySelector('.gradient-option.active');
-                value = activeGradient ? activeGradient.dataset.gradient : 'linear-gradient(135deg, #1a1a2e, #16213e)';
-                break;
-            case 'solid':
-                const solidColor = document.getElementById('solid-color');
-                value = solidColor ? solidColor.value : '#1a1a2e';
-                break;
-            case 'gif':
-                const gifUrlInput = document.getElementById('gif-url');
-                value = gifUrlInput ? gifUrlInput.value.trim() : '';
-                if (!value) {
-                    // Проверяем выбранные GIF из примеров
-                    const activeGif = document.querySelector('.gif-option.active');
-                    value = activeGif ? activeGif.dataset.gif : '';
-                }
-                if (!value) {
-                    alert('Выберите GIF из примеров или введите URL');
-                    return;
-                }
-                break;
-            case 'image':
-                if (!this.backgroundImageData) {
-                    alert('Загрузите изображение');
-                    return;
-                }
-                value = this.backgroundImageData;
-                break;
-        }
-
-        this.userSettings.background = {
-            type: type,
-            value: value
-        };
-
-        await this.saveSettings();
-        this.applyBackground(this.userSettings.background);
-        alert('Фон успешно применен!');
-        this.playSound(this.clickSound);
-    }
-
-    uploadBackground() {
-        const backgroundUpload = document.getElementById('background-upload');
-        if (backgroundUpload) backgroundUpload.click();
-    }
-
-    handleBackgroundUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        if (!file.type.startsWith('image/')) {
-            alert('Пожалуйста, выберите изображение');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            this.backgroundImageData = e.target.result;
-            
-            const preview = document.getElementById('background-preview');
-            if (preview) {
-                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-                preview.style.display = 'block';
-            }
-            
-            this.applyBackground({
-                type: 'image',
-                value: this.backgroundImageData
-            });
-        };
-        reader.readAsDataURL(file);
-    }
-
-    // ==================== СИСТЕМНЫЕ ФУНКЦИИ ====================
-    async saveSettings() {
-        try {
-            await this.apiCall('/api/settings', {
-                method: 'POST',
-                body: JSON.stringify(this.userSettings)
-            });
-        } catch (error) {
-            console.error('Ошибка сохранения настроек:', error);
-        }
-    }
-
-    logout() {
-        if (confirm('Вы уверены, что хотите выйти?')) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            this.currentUser = null;
-            this.token = null;
-            this.activeChatId = null;
-            this.chats = [];
-            this.userSettings = {};
-
-            document.getElementById('app-container').style.display = 'none';
-            document.getElementById('auth-container').style.display = 'block';
-            
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            
-            if (loginForm) {
-                loginForm.reset();
-                loginForm.style.display = 'block';
-            }
-            if (registerForm) {
-                registerForm.reset();
-                registerForm.style.display = 'none';
-            }
-        }
-    }
-
-    async apiCall(url, options = {}) {
-        if (!this.token) {
-            this.logout();
-            return null;
-        }
-
-        const defaultOptions = {
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            }
-        };
-
-        if (options.body && typeof options.body === 'string' && options.body.startsWith('data:')) {
-            defaultOptions.headers['Content-Type'] = 'application/octet-stream';
-        }
-
-        try {
-            const config = { ...defaultOptions, ...options };
-            
-            // Для GET запросов не добавляем body
-            if (config.method === 'GET' || !config.method) {
-                delete config.body;
-            }
-
-            const response = await fetch(url, config);
-            
-            if (response.status === 401) {
-                this.logout();
-                return null;
-            }
-
-            if (!response.ok) {
-                let errorMessage = 'Ошибка сервера';
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.error || errorMessage;
-                } catch (e) {
-                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-                }
-                throw new Error(errorMessage);
-            }
-
-            return response;
-        } catch (error) {
-            console.error('API call error:', error);
-            throw error;
-        }
-    }
-}
-
-// Запуск приложения
-document.addEventListener('DOMContentLoaded', () => {
-    window.messenger = new Messenger();
-});
+       
