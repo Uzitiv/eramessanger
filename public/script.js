@@ -751,144 +751,91 @@ class Messenger {
         }
     }
 
-    // ==================== ПОИСК ПОЛЬЗОВАТЕЛЕЙ ====================
-    handleSearchInput(query) {
-        clearTimeout(this.searchTimeout);
-        this.searchTimeout = setTimeout(() => {
-            this.searchUsers(query);
-        }, 300);
+// ==================== ПОИСК ПОЛЬЗОВАТЕЛЕЙ ====================
+async searchUsers(query) {
+    const resultsContainer = document.getElementById('user-search-results');
+    if (!resultsContainer) return;
+    
+    console.log('Поиск:', query);
+
+    if (!query || query.trim().length < 2) {
+        resultsContainer.innerHTML = `
+            <div class="no-results">
+                <div class="no-results-icon">🔍</div>
+                <p>Введите минимум 2 символа для поиска</p>
+            </div>
+        `;
+        return;
     }
 
-    async searchUsers(query) {
-        const resultsContainer = document.getElementById('user-search-results');
-        if (!resultsContainer) return;
-        
-        if (!query || query.trim().length < 2) {
-            resultsContainer.innerHTML = `
-                <div class="no-results">
-                    <div class="no-results-icon">🔍</div>
-                    <p>Введите минимум 2 символа для поиска</p>
-                </div>
-            `;
-            return;
-        }
-
-        try {
-            const response = await this.apiCall(`/api/users/search?query=${encodeURIComponent(query.trim())}`);
-            if (!response) return;
-
-            const users = await response.json();
-            this.renderSearchResults(users);
-        } catch (error) {
-            console.error('Ошибка поиска:', error);
-            resultsContainer.innerHTML = `
-                <div class="no-results">
-                    <div class="no-results-icon">❌</div>
-                    <p>Ошибка поиска</p>
-                </div>
-            `;
-        }
-    }
-
-    renderSearchResults(users) {
-        const resultsContainer = document.getElementById('user-search-results');
-        if (!resultsContainer) return;
-        
-        const filteredUsers = users.filter(user => user.id !== this.currentUser.id);
-
-        if (filteredUsers.length === 0) {
-            resultsContainer.innerHTML = `
-                <div class="no-results">
-                    <div class="no-results-icon">👥</div>
-                    <p>Пользователи не найдены</p>
-                </div>
-            `;
-            return;
-        }
-
-        resultsContainer.innerHTML = '';
-        filteredUsers.forEach(user => {
-            const userElement = document.createElement('div');
-            userElement.className = 'user-result';
-            
-            const avatarStyle = user.avatar ? `style="background-image: url(${user.avatar})"` : '';
-            userElement.innerHTML = `
-                <div class="user-avatar" ${avatarStyle}>
-                    ${user.avatar ? '' : user.name.charAt(0)}
-                </div>
-                <div class="user-info">
-                    <div class="user-name">${user.name}</div>
-                    <div class="user-username">@${user.username}</div>
-                </div>
-            `;
-            
-            userElement.addEventListener('click', () => this.startChat(user));
-            resultsContainer.appendChild(userElement);
-        });
-    }
-
-    async startChat(user) {
-        try {
-            const response = await this.apiCall('/api/chats', {
-                method: 'POST',
-                body: JSON.stringify({ userId: user.id })
-            });
-
-            if (response) {
-                const result = await response.json();
-                
-                if (result.exists) {
-                    const existingChat = this.chats.find(chat => chat.id === result.id);
-                    if (existingChat) {
-                        this.selectChat(existingChat);
-                    }
-                } else {
-                    await this.loadChats();
-                    
-                    const newChat = this.chats.find(chat => 
-                        chat.username === user.username || chat.other_user_id === user.id
-                    );
-                    
-                    if (newChat) {
-                        this.selectChat(newChat);
-                    }
-                }
-                
-                this.hideSearchModal();
-                this.playSound(this.clickSound);
+    try {
+        const response = await fetch(`/api/users/search?query=${encodeURIComponent(query.trim())}`, {
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             }
-        } catch (error) {
-            console.error('Ошибка создания чата:', error);
-            alert('Ошибка создания чата');
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
         }
+
+        const users = await response.json();
+        console.log('Результаты поиска:', users);
+        this.renderSearchResults(users);
+    } catch (error) {
+        console.error('Ошибка поиска:', error);
+        resultsContainer.innerHTML = `
+            <div class="no-results">
+                <div class="no-results-icon">❌</div>
+                <p>Ошибка поиска: ${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// Для групп тоже исправим
+async searchUsersForGroup(query) {
+    const resultsContainer = document.getElementById('group-search-results');
+    if (!resultsContainer) return;
+    
+    console.log('Поиск для группы:', query);
+
+    if (!query || query.trim().length < 2) {
+        resultsContainer.innerHTML = `
+            <div class="no-results">
+                <div class="no-results-icon">🔍</div>
+                <p>Введите минимум 2 символа для поиска</p>
+            </div>
+        `;
+        return;
     }
 
-    showSearchModal() {
-        const modal = document.getElementById('search-modal');
-        if (modal) modal.classList.add('active');
-        
-        const searchInput = document.getElementById('user-search-input');
-        const searchResults = document.getElementById('user-search-results');
-        
-        if (searchInput) {
-            searchInput.value = '';
-            searchInput.focus();
-        }
-        if (searchResults) {
-            searchResults.innerHTML = `
-                <div class="no-results">
-                    <div class="no-results-icon">🔍</div>
-                    <p>Начните вводить запрос для поиска</p>
-                </div>
-            `;
-        }
-    }
+    try {
+        const response = await fetch(`/api/users/search?query=${encodeURIComponent(query.trim())}`, {
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
 
-    hideSearchModal() {
-        const modal = document.getElementById('search-modal');
-        if (modal) modal.classList.remove('active');
-    }
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
 
+        const users = await response.json();
+        console.log('Результаты поиска для группы:', users);
+        this.renderGroupSearchResults(users);
+    } catch (error) {
+        console.error('Ошибка поиска:', error);
+        resultsContainer.innerHTML = `
+            <div class="no-results">
+                <div class="no-results-icon">❌</div>
+                <p>Ошибка поиска: ${error.message}</p>
+            </div>
+        `;
+    }
+}
     // ==================== НАСТРОЙКИ ====================
     async loadUserSettings() {
         try {
