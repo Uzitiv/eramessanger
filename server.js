@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,13 +14,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Инициализация базы данных
-const db = new sqlite3.Database(':memory:');
+// Создаем папку для базы данных если её нет
+if (!fs.existsSync('data')) {
+    fs.mkdirSync('data');
+}
+
+// Инициализация базы данных (файловая вместо in-memory)
+const db = new sqlite3.Database('./data/messenger.db');
 
 // Создание таблиц с улучшенной структурой
 db.serialize(() => {
   // Таблица пользователей
-  db.run(`CREATE TABLE users (
+  db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE,
     password TEXT,
@@ -27,49 +33,51 @@ db.serialize(() => {
     status TEXT DEFAULT 'в сети',
     avatar TEXT,
     settings TEXT DEFAULT '{}',
+    allow_group_invites BOOLEAN DEFAULT TRUE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
   // Таблица сообщений
-  db.run(`CREATE TABLE messages (
+  db.run(`CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     chat_id INTEGER,
     sender_id INTEGER,
     receiver_id INTEGER,
     text TEXT,
+    attachment TEXT,
     time DATETIME DEFAULT CURRENT_TIMESTAMP,
     read BOOLEAN DEFAULT FALSE,
     FOREIGN KEY(sender_id) REFERENCES users(id),
-    FOREIGN KEY(receiver_id) REFERENCES users(id),
-    FOREIGN KEY(chat_id) REFERENCES chats(id)
+    FOREIGN KEY(receiver_id) REFERENCES users(id)
   )`);
 
   // Таблица чатов
-  db.run(`CREATE TABLE chats (
+  db.run(`CREATE TABLE IF NOT EXISTS chats (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user1_id INTEGER,
     user2_id INTEGER,
+    is_group BOOLEAN DEFAULT FALSE,
+    group_name TEXT,
+    group_avatar TEXT,
+    created_by INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     last_message TEXT DEFAULT '',
     last_message_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user1_id) REFERENCES users(id),
     FOREIGN KEY(user2_id) REFERENCES users(id),
-    UNIQUE(user1_id, user2_id)
+    FOREIGN KEY(created_by) REFERENCES users(id)
   )`);
 
-  // Создаем тестовых пользователей
-  bcrypt.hash('password123', 10, (err, hash) => {
-    if (!err) {
-      db.run('INSERT INTO users (username, password, name) VALUES (?, ?, ?)', 
-        ['user1', hash, 'Анна']);
-      db.run('INSERT INTO users (username, password, name) VALUES (?, ?, ?)', 
-        ['user2', hash, 'Иван']);
-      db.run('INSERT INTO users (username, password, name) VALUES (?, ?, ?)', 
-        ['user3', hash, 'Мария']);
-      db.run('INSERT INTO users (username, password, name) VALUES (?, ?, ?)', 
-        ['user4', hash, 'Алексей']);
-    }
-  });
+  // Таблица участников групп
+  db.run(`CREATE TABLE IF NOT EXISTS group_members (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    group_id INTEGER,
+    user_id INTEGER,
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(group_id) REFERENCES chats(id),
+    FOREIGN KEY(user_id) REFERENCES users(id),
+    UNIQUE(group_id, user_id)
+  )`);
 });
 
 // Middleware для проверки JWT токена
@@ -110,6 +118,13 @@ app.post('/api/register', async (req, res) => {
         theme: 'dark',
         windowOpacity: 0.9,
         glowColor: '#007AFF',
+        glowPosition: 'back',
+        glowIntensity: 0.3,
+        fontSize: '14px',
+        compactMode: false,
+        roundedCorners: true,
+        animations: true,
+        soundsEnabled: true,
         background: {
           type: 'gradient',
           value: 'linear-gradient(135deg, #1a1a2e, #16213e)'
@@ -176,6 +191,7 @@ app.post('/api/login', (req, res) => {
             name: user.name, 
             status: user.status,
             avatar: user.avatar,
+            allow_group_invites: user.allow_group_invites,
             settings: settings
           } 
         });
@@ -219,23 +235,21 @@ app.get('/api/chats', authenticateToken, (req, res) => {
   const query = `
     SELECT 
       c.id,
+      c.is_group,
+      c.group_name,
+      c.group_avatar,
       CASE 
-        WHEN c.user1_id = ? THEN u2.id 
-        ELSE u1.id 
-      END as other_user_id,
-      CASE 
+        WHEN c.is_group = 1 THEN c.group_name
         WHEN c.user1_id = ? THEN u2.name 
         ELSE u1.name 
       END as name,
       CASE 
-        WHEN c.user1_id = ? THEN u2.username 
-        ELSE u1.username 
-      END as username,
-      CASE 
+        WHEN c.is_group = 1 THEN 'группа'
         WHEN c.user1_id = ? THEN u2.status 
         ELSE u1.status 
       END as status,
       CASE 
+        WHEN c.is_group = 1 THEN c.group_avatar
         WHEN c.user1_id = ? THEN u2.avatar 
         ELSE u1.avatar 
       END as avatar,
@@ -244,13 +258,19 @@ app.get('/api/chats', authenticateToken, (req, res) => {
       (SELECT COUNT(*) FROM messages 
        WHERE chat_id = c.id AND receiver_id = ? AND read = FALSE) as unread
     FROM chats c
-    JOIN users u1 ON c.user1_id = u1.id
-    JOIN users u2 ON c.user2_id = u2.id
-    WHERE c.user1_id = ? OR c.user2_id = ?
+    LEFT JOIN users u1 ON c.user1_id = u1.id
+    LEFT JOIN users u2 ON c.user2_id = u2.id
+    WHERE c.id IN (
+      SELECT chat_id FROM (
+        SELECT id as chat_id FROM chats WHERE user1_id = ? OR user2_id = ?
+        UNION
+        SELECT group_id as chat_id FROM group_members WHERE user_id = ?
+      )
+    )
     ORDER BY c.last_message_time DESC
   `;
 
-  db.all(query, [userId, userId, userId, userId, userId, userId, userId, userId], 
+  db.all(query, [userId, userId, userId, userId, userId, userId, userId], 
     (err, chats) => {
       if (err) {
         console.error('Chats error:', err);
@@ -266,88 +286,102 @@ app.get('/api/chats/:chatId/messages', authenticateToken, (req, res) => {
   const userId = req.user.id;
 
   // Проверяем доступ к чату
-  db.get('SELECT * FROM chats WHERE id = ? AND (user1_id = ? OR user2_id = ?)', 
-    [chatId, userId, userId], (err, chat) => {
-      if (err || !chat) {
-        return res.status(404).json({ error: 'Чат не найден' });
+  const checkQuery = `
+    SELECT c.* FROM chats c
+    LEFT JOIN group_members gm ON c.id = gm.group_id
+    WHERE c.id = ? AND (c.user1_id = ? OR c.user2_id = ? OR gm.user_id = ?)
+  `;
+  
+  db.get(checkQuery, [chatId, userId, userId, userId], (err, chat) => {
+    if (err || !chat) {
+      return res.status(404).json({ error: 'Чат не найден' });
+    }
+
+    db.all(`
+      SELECT 
+        m.*,
+        u.name as sender_name,
+        u.avatar as sender_avatar,
+        CASE 
+          WHEN m.sender_id = ? THEN 'outgoing' 
+          ELSE 'incoming' 
+        END as type
+      FROM messages m
+      JOIN users u ON m.sender_id = u.id
+      WHERE m.chat_id = ?
+      ORDER BY m.time ASC
+    `, [userId, chatId], (err, messages) => {
+      if (err) {
+        console.error('Messages error:', err);
+        return res.status(500).json({ error: 'Ошибка загрузки сообщений' });
       }
 
-      db.all(`
-        SELECT 
-          m.*,
-          u.name as sender_name,
-          u.avatar as sender_avatar,
-          CASE 
-            WHEN m.sender_id = ? THEN 'outgoing' 
-            ELSE 'incoming' 
-          END as type
-        FROM messages m
-        JOIN users u ON m.sender_id = u.id
-        WHERE m.chat_id = ?
-        ORDER BY m.time ASC
-      `, [userId, chatId], (err, messages) => {
-        if (err) {
-          console.error('Messages error:', err);
-          return res.status(500).json({ error: 'Ошибка загрузки сообщений' });
-        }
+      // Помечаем сообщения как прочитанные
+      db.run('UPDATE messages SET read = TRUE WHERE chat_id = ? AND receiver_id = ? AND read = FALSE', 
+        [chatId, userId]);
 
-        // Помечаем сообщения как прочитанные
-        db.run('UPDATE messages SET read = TRUE WHERE chat_id = ? AND receiver_id = ? AND read = FALSE', 
-          [chatId, userId]);
-
-        res.json(messages);
-      });
+      res.json(messages);
     });
+  });
 });
 
 // Отправка сообщения
 app.post('/api/chats/:chatId/messages', authenticateToken, (req, res) => {
   const { chatId } = req.params;
-  const { text } = req.body;
+  const { text, attachment } = req.body;
   const userId = req.user.id;
 
-  if (!text || text.trim() === '') {
+  if ((!text || text.trim() === '') && !attachment) {
     return res.status(400).json({ error: 'Сообщение не может быть пустым' });
   }
 
-  // Проверяем доступ к чату и получаем информацию о получателе
-  db.get(`SELECT * FROM chats WHERE id = ? AND (user1_id = ? OR user2_id = ?)`, 
-    [chatId, userId, userId], (err, chat) => {
-      if (err || !chat) {
-        return res.status(404).json({ error: 'Чат не найден' });
-      }
+  // Проверяем доступ к чату
+  const checkQuery = `
+    SELECT c.* FROM chats c
+    LEFT JOIN group_members gm ON c.id = gm.group_id
+    WHERE c.id = ? AND (c.user1_id = ? OR c.user2_id = ? OR gm.user_id = ?)
+  `;
+  
+  db.get(checkQuery, [chatId, userId, userId, userId], (err, chat) => {
+    if (err || !chat) {
+      return res.status(404).json({ error: 'Чат не найден' });
+    }
 
-      const receiverId = chat.user1_id === userId ? chat.user2_id : chat.user1_id;
+    let receiverId = null;
+    if (!chat.is_group) {
+      receiverId = chat.user1_id === userId ? chat.user2_id : chat.user1_id;
+    }
 
-      db.run(`INSERT INTO messages (chat_id, sender_id, receiver_id, text) VALUES (?, ?, ?, ?)`, 
-        [chatId, userId, receiverId, text.trim()], function(err) {
+    db.run(`INSERT INTO messages (chat_id, sender_id, receiver_id, text, attachment) VALUES (?, ?, ?, ?, ?)`, 
+      [chatId, userId, receiverId, text ? text.trim() : null, attachment], function(err) {
+        if (err) {
+          console.error('Send message error:', err);
+          return res.status(500).json({ error: 'Ошибка отправки сообщения' });
+        }
+
+        // Обновляем последнее сообщение в чате
+        const lastMessage = attachment ? '📎 Файл' : (text ? text.trim() : '');
+        db.run(`UPDATE chats SET last_message = ?, last_message_time = CURRENT_TIMESTAMP WHERE id = ?`, 
+          [lastMessage, chatId]);
+
+        // Получаем созданное сообщение
+        db.get(`
+          SELECT 
+            m.*,
+            u.name as sender_name,
+            u.avatar as sender_avatar,
+            'outgoing' as type
+          FROM messages m
+          JOIN users u ON m.sender_id = u.id
+          WHERE m.id = ?
+        `, [this.lastID], (err, message) => {
           if (err) {
-            console.error('Send message error:', err);
-            return res.status(500).json({ error: 'Ошибка отправки сообщения' });
+            return res.status(500).json({ error: 'Ошибка получения сообщения' });
           }
-
-          // Обновляем последнее сообщение в чате
-          db.run(`UPDATE chats SET last_message = ?, last_message_time = CURRENT_TIMESTAMP WHERE id = ?`, 
-            [text.trim(), chatId]);
-
-          // Получаем созданное сообщение
-          db.get(`
-            SELECT 
-              m.*,
-              u.name as sender_name,
-              u.avatar as sender_avatar,
-              'outgoing' as type
-            FROM messages m
-            JOIN users u ON m.sender_id = u.id
-            WHERE m.id = ?
-          `, [this.lastID], (err, message) => {
-            if (err) {
-              return res.status(500).json({ error: 'Ошибка получения сообщения' });
-            }
-            res.json(message);
-          });
+          res.json(message);
         });
-    });
+      });
+  });
 });
 
 // Создание нового чата
@@ -401,23 +435,86 @@ app.post('/api/chats', authenticateToken, (req, res) => {
   });
 });
 
+// Создание группы
+app.post('/api/groups', authenticateToken, (req, res) => {
+  const { groupName, userIds } = req.body;
+  const currentUserId = req.user.id;
+
+  if (!groupName || !userIds || !Array.isArray(userIds)) {
+    return res.status(400).json({ error: 'Неверные данные для создания группы' });
+  }
+
+  // Проверяем, разрешено ли добавлять пользователей
+  const placeholders = userIds.map(() => '?').join(',');
+  const checkQuery = `SELECT id, username, allow_group_invites FROM users WHERE id IN (${placeholders})`;
+  
+  db.all(checkQuery, userIds, (err, users) => {
+    if (err) {
+      return res.status(500).json({ error: 'Ошибка проверки пользователей' });
+    }
+
+    const notAllowedUsers = users.filter(user => !user.allow_group_invites);
+    if (notAllowedUsers.length > 0) {
+      const usernames = notAllowedUsers.map(u => u.username).join(', ');
+      return res.status(400).json({ 
+        error: `Следующие пользователи запретили добавлять себя в группы: ${usernames}` 
+      });
+    }
+
+    // Создаем группу
+    db.run(`INSERT INTO chats (is_group, group_name, created_by, last_message) VALUES (?, ?, ?, ?)`, 
+      [true, groupName.trim(), currentUserId, 'Группа создана'], function(err) {
+        if (err) {
+          console.error('Create group error:', err);
+          return res.status(500).json({ error: 'Ошибка создания группы' });
+        }
+
+        const groupId = this.lastID;
+
+        // Добавляем создателя в группу
+        const members = [currentUserId, ...userIds];
+        const insertMembers = () => {
+          if (members.length === 0) {
+            // Все участники добавлены
+            res.json({ 
+              id: groupId, 
+              message: 'Группа успешно создана'
+            });
+            return;
+          }
+
+          const memberId = members.shift();
+          db.run('INSERT INTO group_members (group_id, user_id) VALUES (?, ?)', 
+            [groupId, memberId], function(err) {
+              if (err) {
+                console.error('Add member error:', err);
+              }
+              insertMembers();
+            });
+        };
+
+        insertMembers();
+      });
+  });
+});
+
 // Обновление профиля
 app.put('/api/profile', authenticateToken, (req, res) => {
-  const { name, status, avatar } = req.body;
+  const { name, status, avatar, allow_group_invites } = req.body;
   const userId = req.user.id;
 
   if (!name || name.trim() === '') {
     return res.status(400).json({ error: 'Имя не может быть пустым' });
   }
 
-  db.run('UPDATE users SET name = ?, status = ?, avatar = ? WHERE id = ?', 
-    [name.trim(), status || 'в сети', avatar, userId], function(err) {
+  db.run('UPDATE users SET name = ?, status = ?, avatar = ?, allow_group_invites = ? WHERE id = ?', 
+    [name.trim(), status || 'в сети', avatar, allow_group_invites !== undefined ? allow_group_invites : true, userId], function(err) {
       if (err) {
         return res.status(500).json({ error: 'Ошибка обновления профиля' });
       }
 
       // Получаем обновленного пользователя
-      db.get('SELECT id, username, name, status, avatar, settings FROM users WHERE id = ?', 
+      db.get('SELECT id, username, name, status, avatar, allow_group_invites, settings FROM users WHERE id = ?', 
         [userId], (err, user) => {
           if (err) {
             return res.status(500).json({ error: 'Ошибка получения профиля' });
@@ -437,6 +534,7 @@ app.put('/api/profile', authenticateToken, (req, res) => {
               name: user.name,
               status: user.status,
               avatar: user.avatar,
+              allow_group_invites: user.allow_group_invites,
               settings: settings
             }, 
             message: 'Профиль обновлен' 
@@ -476,7 +574,7 @@ app.put('/api/profile/username', authenticateToken, (req, res) => {
       const newToken = jwt.sign({ id: userId, username: newUsername }, JWT_SECRET);
 
       // Получаем обновленного пользователя
-      db.get('SELECT id, username, name, status, avatar, settings FROM users WHERE id = ?', 
+      db.get('SELECT id, username, name, status, avatar, allow_group_invites, settings FROM users WHERE id = ?', 
         [userId], (err, user) => {
           if (err) {
             return res.status(500).json({ error: 'Ошибка получения профиля' });
@@ -497,6 +595,7 @@ app.put('/api/profile/username', authenticateToken, (req, res) => {
               name: user.name,
               status: user.status,
               avatar: user.avatar,
+              allow_group_invites: user.allow_group_invites,
               settings: settings
             }, 
             message: 'Username успешно изменен' 
@@ -520,7 +619,13 @@ app.get('/api/settings', authenticateToken, (req, res) => {
         theme: 'dark',
         windowOpacity: 0.9,
         glowColor: '#007AFF',
+        glowPosition: 'back',
         glowIntensity: 0.3,
+        fontSize: '14px',
+        compactMode: false,
+        roundedCorners: true,
+        animations: true,
+        soundsEnabled: true,
         background: {
           type: 'gradient',
           value: 'linear-gradient(135deg, #1a1a2e, #16213e)'
@@ -532,7 +637,13 @@ app.get('/api/settings', authenticateToken, (req, res) => {
         theme: 'dark',
         windowOpacity: 0.9,
         glowColor: '#007AFF',
+        glowPosition: 'back',
         glowIntensity: 0.3,
+        fontSize: '14px',
+        compactMode: false,
+        roundedCorners: true,
+        animations: true,
+        soundsEnabled: true,
         background: {
           type: 'gradient',
           value: 'linear-gradient(135deg, #1a1a2e, #16213e)'
@@ -556,18 +667,15 @@ app.post('/api/settings', authenticateToken, (req, res) => {
     });
 });
 
-// Загрузка аватарки (демо-версия)
-app.post('/api/upload/avatar', authenticateToken, (req, res) => {
-  const { avatarData } = req.body;
+// Загрузка файла
+app.post('/api/upload', authenticateToken, express.raw({type: '*/*', limit: '10mb'}), (req, res) => {
+  const fileName = `file_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  const fileData = req.body.toString('base64');
   
-  if (!avatarData) {
-    return res.status(400).json({ error: 'Данные аватарки отсутствуют' });
-  }
-
   res.json({ 
     success: true, 
-    avatarUrl: avatarData,
-    message: 'Аватар успешно обновлен' 
+    fileUrl: `data:application/octet-stream;base64,${fileData}`,
+    fileName: fileName
   });
 });
 
@@ -575,7 +683,7 @@ app.post('/api/upload/avatar', authenticateToken, (req, res) => {
 app.get('/api/user/:userId', authenticateToken, (req, res) => {
   const { userId } = req.params;
 
-  db.get('SELECT id, username, name, status, avatar FROM users WHERE id = ?', [userId], (err, user) => {
+  db.get('SELECT id, username, name, status, avatar, allow_group_invites FROM users WHERE id = ?', [userId], (err, user) => {
     if (err || !user) {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
@@ -586,4 +694,5 @@ app.get('/api/user/:userId', authenticateToken, (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Сервер запущен на порту ${PORT}`);
   console.log(`📱 Открой http://localhost:${PORT} в браузере`);
+  console.log(`💾 База данных сохранена в файле ./data/messenger.db`);
 });
