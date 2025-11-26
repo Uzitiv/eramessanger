@@ -14,14 +14,7 @@ class Messenger {
         
         this.init();
     }
-logout() {
-    this.currentUser = null;
-    this.token = null;
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    document.getElementById('auth-container').style.display = 'block';
-    document.getElementById('app-container').style.display = 'none';
-}
+
     checkMobile() {
         return window.innerWidth <= 768;
     }
@@ -31,12 +24,33 @@ logout() {
         this.checkAuth();
         this.createAudioElements();
         this.setupMobileView();
+        this.setupRightPanel();
+        
+        setTimeout(() => this.checkButtons(), 100);
+    }
+
+    checkButtons() {
+        console.log('Проверка кнопок:');
+        console.log('new-chat-btn:', document.getElementById('new-chat-btn'));
+        console.log('find-users-btn:', document.getElementById('find-users-btn'));
     }
 
     setupMobileView() {
         if (this.isMobile) {
             document.body.classList.add('mobile-view');
         }
+    }
+
+    setupRightPanel() {
+        this.bindButton('panel-new-chat', () => this.showSearchModal());
+        this.bindButton('panel-new-group', () => this.showGroupModal());
+        this.bindButton('panel-find-users', () => this.showSearchModal());
+        this.bindButton('panel-settings', () => this.showSettingsModal());
+        this.bindButton('panel-profile', () => {
+            this.showSettingsModal();
+            this.switchSettingsTab('profile');
+        });
+        this.bindButton('panel-logout', () => this.logout());
     }
 
     createAudioElements() {
@@ -51,37 +65,8 @@ logout() {
             sound.play().catch(e => console.log('Audio play failed:', e));
         }
     }
-async apiCall(url, options = {}) {
-    const config = {
-        headers: {
-            'Authorization': `Bearer ${this.token}`,
-            'Content-Type': 'application/json',
-            ...options.headers
-        },
-        ...options
-    };
 
-    if (config.body && typeof config.body === 'object') {
-        config.body = JSON.stringify(config.body);
-    }
-
-    try {
-        const response = await fetch(url, config);
-        
-        if (response.status === 401) {
-            this.logout();
-            return null;
-        }
-        
-        return response;
-    } catch (error) {
-        console.error('API call failed:', error);
-        throw error;
-    }
-}
     bindEvents() {
-        console.log('Привязка событий...');
-        
         // Авторизация
         document.getElementById('login-form').addEventListener('submit', (e) => this.handleLogin(e));
         document.getElementById('register-form').addEventListener('submit', (e) => this.handleRegister(e));
@@ -96,12 +81,10 @@ async apiCall(url, options = {}) {
 
         // Основные кнопки
         this.bindButton('new-chat-btn', () => this.showSearchModal());
-        this.bindButton('find-users-btn', () => this.showSearchModal());
         this.bindButton('new-group-btn', () => this.showGroupModal());
-        this.bindButton('settings-btn', () => this.showSettingsModal());
+        this.bindButton('find-users-btn', () => this.showSearchModal());
         this.bindButton('close-search-modal', () => this.hideSearchModal());
         this.bindButton('send-btn', () => this.sendMessage());
-        this.bindButton('logout-btn', () => this.logout());
         this.bindButton('attach-btn', () => this.uploadFile());
         this.bindButton('close-settings-modal', () => this.hideSettingsModal());
         this.bindButton('close-group-modal', () => this.hideGroupModal());
@@ -113,15 +96,6 @@ async apiCall(url, options = {}) {
         this.bindButton('save-effects-btn', () => this.saveEffectsSettings());
         this.bindButton('save-background-btn', () => this.saveBackgroundSettings());
         this.bindButton('upload-background-btn', () => this.uploadBackground());
-        this.bindButton('test-gif-btn', () => this.testGifUrl());
-
-        // Кнопки правой панели
-        this.bindButton('right-panel-settings', () => this.showSettingsModal());
-        this.bindButton('right-panel-logout', () => this.logout());
-        this.bindButton('right-panel-new-chat', () => this.showSearchModal());
-        this.bindButton('right-panel-new-group', () => this.showGroupModal());
-        this.bindButton('right-panel-theme', () => this.switchToThemeTab());
-        this.bindButton('right-panel-profile', () => this.switchToProfileTab());
 
         // Поиск
         document.getElementById('user-search-input').addEventListener('input', (e) => this.handleSearchInput(e.target.value));
@@ -179,6 +153,7 @@ async apiCall(url, options = {}) {
         const element = document.getElementById(id);
         if (element) {
             element.addEventListener('click', handler);
+            console.log(`Кнопка ${id} привязана`);
         } else {
             console.warn(`Элемент с id "${id}" не найден`);
         }
@@ -225,14 +200,12 @@ async apiCall(url, options = {}) {
                 this.showApp();
                 await this.loadChats();
                 await this.loadUserSettings();
-                this.updateRightPanel();
                 this.hideError('login-error');
                 this.playSound(this.clickSound);
             } else {
                 this.showError('login-error', data.error);
             }
         } catch (error) {
-            console.error('Login error:', error);
             this.showError('login-error', 'Ошибка подключения к серверу');
         }
     }
@@ -270,14 +243,12 @@ async apiCall(url, options = {}) {
                 this.showApp();
                 await this.loadChats();
                 await this.loadUserSettings();
-                this.updateRightPanel();
                 this.hideError('register-error');
                 this.playSound(this.clickSound);
             } else {
                 this.showError('register-error', data.error);
             }
         } catch (error) {
-            console.error('Register error:', error);
             this.showError('register-error', 'Ошибка подключения к серверу');
         }
     }
@@ -309,9 +280,7 @@ async apiCall(url, options = {}) {
                 this.showApp();
                 this.loadChats();
                 this.loadUserSettings();
-                this.updateRightPanel();
             } catch (e) {
-                console.error('Auth error:', e);
                 this.logout();
             }
         }
@@ -323,27 +292,6 @@ async apiCall(url, options = {}) {
         
         if (this.isMobile) {
             this.setupMobileNavigation();
-        }
-    }
-
-    updateRightPanel() {
-        if (this.currentUser) {
-            const panelAvatar = document.getElementById('panel-avatar');
-            const panelUserName = document.getElementById('panel-user-name');
-            const panelUserStatus = document.getElementById('panel-user-status');
-
-            if (panelUserName) panelUserName.textContent = this.currentUser.name;
-            if (panelUserStatus) panelUserStatus.textContent = this.currentUser.status || 'в сети';
-
-            if (panelAvatar) {
-                if (this.currentUser.avatar) {
-                    panelAvatar.style.backgroundImage = `url(${this.currentUser.avatar})`;
-                    panelAvatar.innerHTML = '';
-                } else {
-                    panelAvatar.style.backgroundImage = 'none';
-                    panelAvatar.innerHTML = '<div class="avatar-placeholder">👤</div>';
-                }
-            }
         }
     }
 
@@ -369,7 +317,7 @@ async apiCall(url, options = {}) {
                     <span>Настройки</span>
                 </button>
             `;
-            document.querySelector('.messenger-wrapper').appendChild(mobileNav);
+            document.querySelector('.messenger-container').appendChild(mobileNav);
 
             mobileNav.querySelectorAll('.mobile-nav-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -386,7 +334,6 @@ async apiCall(url, options = {}) {
     handleMobileNavAction(action) {
         switch (action) {
             case 'chats':
-                this.showChatsList();
                 break;
             case 'search':
                 this.showSearchModal();
@@ -475,7 +422,10 @@ async apiCall(url, options = {}) {
         const chatName = document.getElementById('current-chat-name');
         const chatStatus = document.getElementById('current-chat-status');
         if (chatName) chatName.textContent = chat.name;
-        if (chatStatus) chatStatus.textContent = chat.is_group ? 'Групповой чат' : 'в сети';
+        if (chatStatus) chatStatus.textContent = chat.status;
+        
+        // Обновляем правую панель
+        this.updateRightPanel(chat);
         
         // Активируем поле ввода
         const messageInput = document.getElementById('message-input');
@@ -498,14 +448,30 @@ async apiCall(url, options = {}) {
         }
     }
 
+    updateRightPanel(chat = null) {
+        const panelInfo = document.getElementById('panel-chat-info');
+        if (!panelInfo) return;
+        
+        if (!chat) {
+            panelInfo.innerHTML = '<p>Чат не выбран</p>';
+            return;
+        }
+        
+        panelInfo.innerHTML = `
+            <div style="text-align: center;">
+                <div style="font-weight: 600; margin-bottom: 8px;">${chat.name}</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">${chat.status || 'в сети'}</div>
+                ${chat.is_group ? '<div style="font-size: 11px; background: var(--primary-color); padding: 4px 8px; border-radius: 10px; display: inline-block;">Групповой чат</div>' : ''}
+            </div>
+        `;
+    }
+
     showChatView() {
         if (this.isMobile) {
             const chatsPanel = document.querySelector('.chats-panel');
             const messengerContainer = document.querySelector('.messenger-container');
-            const rightPanel = document.querySelector('.right-panel');
             if (chatsPanel) chatsPanel.style.display = 'none';
             if (messengerContainer) messengerContainer.style.display = 'flex';
-            if (rightPanel) rightPanel.style.display = 'none';
         }
     }
 
@@ -513,10 +479,8 @@ async apiCall(url, options = {}) {
         if (this.isMobile) {
             const chatsPanel = document.querySelector('.chats-panel');
             const messengerContainer = document.querySelector('.messenger-container');
-            const rightPanel = document.querySelector('.right-panel');
             if (chatsPanel) chatsPanel.style.display = 'flex';
             if (messengerContainer) messengerContainer.style.display = 'none';
-            if (rightPanel) rightPanel.style.display = 'none';
         }
     }
 
@@ -838,7 +802,7 @@ async apiCall(url, options = {}) {
         const resultsContainer = document.getElementById('user-search-results');
         if (!resultsContainer) return;
         
-        console.log('Поиск:', query);
+        console.log('Поиск пользователей:', query);
 
         if (!query || query.trim().length < 2) {
             resultsContainer.innerHTML = `
@@ -852,10 +816,12 @@ async apiCall(url, options = {}) {
 
         try {
             const response = await this.apiCall(`/api/users/search?query=${encodeURIComponent(query.trim())}`);
-            if (!response) return;
+            if (!response) {
+                throw new Error('Нет ответа от сервера');
+            }
 
             const users = await response.json();
-            console.log('Результаты поиска:', users);
+            console.log('Найдено пользователей:', users);
             this.renderSearchResults(users);
         } catch (error) {
             console.error('Ошибка поиска:', error);
@@ -898,44 +864,47 @@ async apiCall(url, options = {}) {
                 </div>
             `;
             
-            userElement.addEventListener('click', async () => {
-                await this.startChatWithUser(user);
-            });
+            userElement.addEventListener('click', () => this.startChatWithUser(user));
             resultsContainer.appendChild(userElement);
         });
     }
 
     async startChatWithUser(user) {
         try {
+            console.log('Создание чата с пользователем:', user);
+            
             const response = await this.apiCall('/api/chats', {
                 method: 'POST',
                 body: JSON.stringify({ userId: user.id })
             });
 
-            if (response) {
-                const result = await response.json();
-                this.hideSearchModal();
+            if (!response) {
+                throw new Error('Нет ответа от сервера');
+            }
+
+            const data = await response.json();
+            console.log('Ответ создания чата:', data);
+
+            if (data.id) {
+                // Чат создан или найден существующий
+                const chat = {
+                    id: data.id,
+                    name: user.name,
+                    status: user.status,
+                    avatar: user.avatar,
+                    is_group: false
+                };
                 
-                if (result.exists) {
-                    // Чат уже существует, выбираем его
-                    const existingChat = this.chats.find(chat => chat.id === result.id);
-                    if (existingChat) {
-                        await this.selectChat(existingChat);
-                    }
-                } else {
-                    // Новый чат создан, перезагружаем список
-                    await this.loadChats();
-                    // Находим и выбираем новый чат
-                    const newChat = this.chats.find(chat => chat.id === result.id);
-                    if (newChat) {
-                        await this.selectChat(newChat);
-                    }
-                }
-                this.playSound(this.clickSound);
+                await this.selectChat(chat);
+                this.hideSearchModal();
+                await this.loadChats();
+                alert('Чат успешно создан!');
+            } else {
+                throw new Error(data.error || 'Неизвестная ошибка');
             }
         } catch (error) {
             console.error('Ошибка создания чата:', error);
-            alert('Ошибка создания чата');
+            alert(`Ошибка создания чата: ${error.message}`);
         }
     }
 
@@ -988,7 +957,6 @@ async apiCall(url, options = {}) {
             }
         } catch (error) {
             console.error('Ошибка загрузки настроек:', error);
-            // Настройки по умолчанию
             this.userSettings = {
                 theme: 'dark',
                 windowOpacity: 0.9,
@@ -1011,7 +979,6 @@ async apiCall(url, options = {}) {
     }
 
     applySettings() {
-        // Применяем все настройки
         if (this.userSettings.theme) {
             this.applyTheme(this.userSettings.theme);
         }
@@ -1042,7 +1009,7 @@ async apiCall(url, options = {}) {
             document.body.classList.remove('compact-mode');
         }
 
-        if (this.userSettings.roundedCorners !== false) {
+        if (this.userSettings.roundedCorners) {
             document.body.classList.add('rounded-corners');
             document.body.classList.remove('no-rounded-corners');
         } else {
@@ -1066,14 +1033,7 @@ async apiCall(url, options = {}) {
     }
 
     applyTheme(theme) {
-        const themeClasses = [
-            'theme-dark', 'theme-light', 'theme-gray', 'theme-dark-gray', 
-            'theme-blue', 'theme-purple', 'theme-green', 'theme-orange',
-            'theme-pink', 'theme-red', 'theme-teal', 'theme-cyan',
-            'theme-indigo', 'theme-brown', 'theme-deep-purple'
-        ];
-        
-        document.body.classList.remove(...themeClasses);
+        document.body.classList.remove('theme-dark', 'theme-light', 'theme-gray', 'theme-dark-gray', 'theme-blue', 'theme-purple', 'theme-green', 'theme-orange');
         document.body.classList.add(`theme-${theme}`);
     }
 
@@ -1085,22 +1045,27 @@ async apiCall(url, options = {}) {
         if (chatsPanel) chatsPanel.style.opacity = opacity;
         if (messengerContainer) messengerContainer.style.opacity = opacity;
         if (rightPanel) rightPanel.style.opacity = opacity;
+        
+        const opacitySlider = document.getElementById('window-opacity');
+        const opacityValue = document.getElementById('opacity-value');
+        
+        if (opacitySlider) opacitySlider.value = opacity;
+        if (opacityValue) opacityValue.textContent = Math.round(opacity * 100) + '%';
     }
 
     applyGlowColor(color) {
         document.documentElement.style.setProperty('--glow-color', color);
-        
-        // Обновляем активную кнопку цвета
-        document.querySelectorAll('.glow-color-option').forEach(option => {
-            option.classList.remove('active');
-            if (option.dataset.color === color) {
-                option.classList.add('active');
-            }
-        });
-        
-        // Обновляем кастомный цвет
         const customColor = document.getElementById('glow-color-custom');
         if (customColor) customColor.value = color;
+        
+        document.querySelectorAll('.glow-color-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        
+        const activeOption = document.querySelector(`.glow-color-option[data-color="${color}"]`);
+        if (activeOption) {
+            activeOption.classList.add('active');
+        }
     }
 
     applyGlowPosition(position) {
@@ -1116,14 +1081,25 @@ async apiCall(url, options = {}) {
                 panel.classList.add(`glow-${position}`);
             }
         });
+        
+        document.querySelectorAll('input[name="glow-position"]').forEach(radio => {
+            radio.checked = radio.value === position;
+        });
     }
 
     applyGlowIntensity(intensity) {
         document.documentElement.style.setProperty('--glow-intensity', intensity);
+        const intensitySlider = document.getElementById('glow-intensity');
+        const intensityValue = document.getElementById('glow-intensity-value');
+        
+        if (intensitySlider) intensitySlider.value = intensity;
+        if (intensityValue) intensityValue.textContent = Math.round(intensity * 100) + '%';
     }
 
     applyPanelSize(size) {
         document.documentElement.setAttribute('data-panel-size', size);
+        const panelSelect = document.getElementById('panel-size');
+        if (panelSelect) panelSelect.value = size;
     }
 
     applyBackground(background) {
@@ -1131,42 +1107,26 @@ async apiCall(url, options = {}) {
 
         const body = document.body;
         
-        // Удаляем все классы фона
-        body.className = body.className.replace(/(^|\s)bg-\S+/g, '');
-        
         switch (background.type) {
             case 'gradient':
                 body.style.background = background.value;
                 body.style.backgroundSize = 'cover';
-                body.classList.add('bg-gradient-custom');
+                body.className = body.className.replace(/(^|\s)bg-\S+/g, '') + ' bg-gradient-custom';
                 break;
             case 'solid':
                 body.style.background = background.value;
                 body.style.backgroundSize = 'cover';
-                body.classList.add('bg-solid');
+                body.className = body.className.replace(/(^|\s)bg-\S+/g, '') + ' bg-solid';
                 break;
             case 'gif':
-                // Создаем изображение для проверки загрузки GIF
-                const img = new Image();
-                img.onload = () => {
-                    body.style.background = `url(${background.value})`;
-                    body.style.backgroundSize = 'cover';
-                    body.classList.add('bg-gif');
-                };
-                img.onerror = () => {
-                    console.error('Не удалось загрузить GIF фон');
-                    alert('Не удалось загрузить GIF. Проверьте URL.');
-                    // Возвращаемся к градиенту по умолчанию
-                    body.style.background = 'linear-gradient(135deg, #1a1a2e, #16213e)';
-                    body.style.backgroundSize = 'cover';
-                    body.classList.add('bg-gradient-custom');
-                };
-                img.src = background.value;
+                body.style.background = `url(${background.value})`;
+                body.style.backgroundSize = 'cover';
+                body.className = body.className.replace(/(^|\s)bg-\S+/g, '') + ' bg-gif';
                 break;
             case 'image':
                 body.style.background = `url(${background.value})`;
                 body.style.backgroundSize = 'cover';
-                body.classList.add('bg-image');
+                body.className = body.className.replace(/(^|\s)bg-\S+/g, '') + ' bg-image';
                 break;
         }
     }
@@ -1222,4 +1182,491 @@ async apiCall(url, options = {}) {
 
         if (this.userSettings.glowPosition) {
             this.applyGlowPosition(this.userSettings.glowPosition);
-       
+        }
+
+        if (this.userSettings.glowIntensity !== undefined) {
+            const intensitySlider = document.getElementById('glow-intensity');
+            const intensityValue = document.getElementById('glow-intensity-value');
+            if (intensitySlider) intensitySlider.value = this.userSettings.glowIntensity;
+            if (intensityValue) intensityValue.textContent = Math.round(this.userSettings.glowIntensity * 100) + '%';
+        }
+
+        if (this.userSettings.fontSize) {
+            const fontSize = document.getElementById('font-size');
+            if (fontSize) fontSize.value = this.userSettings.fontSize;
+        }
+
+        // Чекбоксы
+        const compactMode = document.getElementById('compact-mode');
+        const roundedCorners = document.getElementById('rounded-corners');
+        const animations = document.getElementById('animations');
+        const soundsEnabled = document.getElementById('sounds-enabled');
+        
+        if (compactMode) compactMode.checked = !!this.userSettings.compactMode;
+        if (roundedCorners) roundedCorners.checked = this.userSettings.roundedCorners !== false;
+        if (animations) animations.checked = this.userSettings.animations !== false;
+        if (soundsEnabled) soundsEnabled.checked = this.userSettings.soundsEnabled !== false;
+
+        // Размер панелей
+        if (this.userSettings.panelSize) {
+            const panelSize = document.getElementById('panel-size');
+            if (panelSize) panelSize.value = this.userSettings.panelSize;
+        }
+
+        // Фон
+        if (this.userSettings.background) {
+            const backgroundType = document.getElementById('background-type');
+            if (backgroundType) {
+                backgroundType.value = this.userSettings.background.type;
+                this.switchBackgroundType(this.userSettings.background.type);
+            }
+            
+            switch (this.userSettings.background.type) {
+                case 'gradient':
+                    const activeGradient = document.querySelector(`.gradient-option[data-gradient="${this.userSettings.background.value}"]`);
+                    if (activeGradient) {
+                        document.querySelectorAll('.gradient-option').forEach(opt => opt.classList.remove('active'));
+                        activeGradient.classList.add('active');
+                    }
+                    break;
+                case 'solid':
+                    const solidColor = document.getElementById('solid-color');
+                    if (solidColor) solidColor.value = this.userSettings.background.value;
+                    break;
+                case 'gif':
+                    const gifUrl = document.getElementById('gif-url');
+                    if (gifUrl) gifUrl.value = this.userSettings.background.value;
+                    break;
+            }
+        }
+    }
+
+    showSettingsModal() {
+        const modal = document.getElementById('settings-modal');
+        if (modal) {
+            modal.classList.add('active');
+            this.populateSettingsForm();
+        }
+    }
+
+    hideSettingsModal() {
+        const modal = document.getElementById('settings-modal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    switchSettingsTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        const tabContent = document.getElementById(`${tabName}-tab`);
+        const tabBtn = document.querySelector(`[data-tab="${tabName}"]`);
+        
+        if (tabContent) tabContent.classList.add('active');
+        if (tabBtn) tabBtn.classList.add('active');
+    }
+
+    // ==================== ПРОФИЛЬ ====================
+    uploadAvatar() {
+        const avatarUpload = document.getElementById('avatar-upload');
+        if (avatarUpload) avatarUpload.click();
+    }
+
+    handleAvatarUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('Пожалуйста, выберите изображение');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const avatarPreview = document.getElementById('avatar-preview');
+            if (avatarPreview) {
+                avatarPreview.style.backgroundImage = `url(${e.target.result})`;
+                avatarPreview.innerHTML = '';
+            }
+            
+            this.avatarData = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async saveProfile() {
+        const nameInput = document.getElementById('profile-name');
+        const statusInput = document.getElementById('profile-status');
+        const allowGroupInvites = document.getElementById('allow-group-invites');
+        
+        const name = nameInput ? nameInput.value.trim() : '';
+        const status = statusInput ? statusInput.value.trim() : '';
+        const allowInvites = allowGroupInvites ? allowGroupInvites.checked : true;
+
+        if (!name) {
+            alert('Введите имя');
+            return;
+        }
+
+        try {
+            const response = await this.apiCall('/api/profile', {
+                method: 'PUT',
+                body: JSON.stringify({ 
+                    name, 
+                    status: status || 'в сети',
+                    avatar: this.avatarData || this.currentUser.avatar,
+                    allow_group_invites: allowInvites
+                })
+            });
+
+            if (response) {
+                const data = await response.json();
+                this.currentUser = data.user;
+                localStorage.setItem('user', JSON.stringify(this.currentUser));
+                
+                const avatarPreview = document.getElementById('avatar-preview');
+                if (avatarPreview && this.currentUser.avatar) {
+                    avatarPreview.style.backgroundImage = `url(${this.currentUser.avatar})`;
+                    avatarPreview.innerHTML = '';
+                }
+                
+                this.hideSettingsModal();
+                await this.loadChats();
+                alert('Профиль успешно обновлен!');
+                this.playSound(this.clickSound);
+            }
+        } catch (error) {
+            console.error('Ошибка сохранения профиля:', error);
+            alert('Ошибка сохранения профиля');
+        }
+    }
+
+    async changeUsername() {
+        const usernameInput = document.getElementById('profile-username');
+        const newUsername = usernameInput ? usernameInput.value.trim() : '';
+
+        if (!newUsername) {
+            alert('Введите новый username');
+            return;
+        }
+
+        if (newUsername === this.currentUser.username) {
+            alert('Это ваш текущий username');
+            return;
+        }
+
+        if (newUsername.length < 3) {
+            alert('Username должен содержать минимум 3 символа');
+            return;
+        }
+
+        try {
+            const response = await this.apiCall('/api/profile/username', {
+                method: 'PUT',
+                body: JSON.stringify({ username: newUsername })
+            });
+
+            if (response) {
+                const data = await response.json();
+                this.currentUser = data.user;
+                this.token = data.token;
+                localStorage.setItem('token', this.token);
+                localStorage.setItem('user', JSON.stringify(this.currentUser));
+                alert('Username успешно изменен!');
+                this.playSound(this.clickSound);
+            }
+        } catch (error) {
+            console.error('Ошибка смены username:', error);
+            alert(`Ошибка смены username: ${error.message}`);
+        }
+    }
+
+    // ==================== ТЕМА ====================
+    selectTheme(element) {
+        document.querySelectorAll('.theme-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        element.classList.add('active');
+        
+        const theme = element.dataset.theme;
+        this.applyTheme(theme);
+    }
+
+    async saveThemeSettings() {
+        const activeTheme = document.querySelector('.theme-option.active');
+        const theme = activeTheme ? activeTheme.dataset.theme : 'dark';
+
+        const compactMode = document.getElementById('compact-mode');
+        const roundedCorners = document.getElementById('rounded-corners');
+        const animations = document.getElementById('animations');
+        const soundsEnabled = document.getElementById('sounds-enabled');
+        const panelSize = document.getElementById('panel-size');
+
+        this.userSettings.theme = theme;
+        this.userSettings.compactMode = compactMode ? compactMode.checked : false;
+        this.userSettings.roundedCorners = roundedCorners ? roundedCorners.checked : true;
+        this.userSettings.animations = animations ? animations.checked : true;
+        this.userSettings.soundsEnabled = soundsEnabled ? soundsEnabled.checked : true;
+        this.userSettings.panelSize = panelSize ? panelSize.value : 'medium';
+
+        await this.saveSettings();
+        this.applySettings();
+        alert('Настройки успешно применены!');
+        this.playSound(this.clickSound);
+    }
+
+    // ==================== ЭФФЕКТЫ ====================
+    updateOpacityPreview(value) {
+        const opacityValue = document.getElementById('opacity-value');
+        if (opacityValue) opacityValue.textContent = Math.round(value * 100) + '%';
+        this.applyWindowOpacity(value);
+    }
+
+    selectGlowColor(element) {
+        document.querySelectorAll('.glow-color-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        element.classList.add('active');
+        
+        const color = element.dataset.color;
+        this.applyGlowColor(color);
+    }
+
+    selectCustomGlowColor(color) {
+        this.applyGlowColor(color);
+    }
+
+    selectGlowPosition(position) {
+        this.applyGlowPosition(position);
+    }
+
+    updateGlowIntensityPreview(value) {
+        const intensityValue = document.getElementById('glow-intensity-value');
+        if (intensityValue) intensityValue.textContent = Math.round(value * 100) + '%';
+        this.applyGlowIntensity(value);
+    }
+
+    async saveEffectsSettings() {
+        const opacitySlider = document.getElementById('window-opacity');
+        const glowColorCustom = document.getElementById('glow-color-custom');
+        const glowIntensitySlider = document.getElementById('glow-intensity');
+        const fontSizeSelect = document.getElementById('font-size');
+        const glowPositionRadio = document.querySelector('input[name="glow-position"]:checked');
+
+        const opacity = opacitySlider ? parseFloat(opacitySlider.value) : 0.9;
+        const glowColor = glowColorCustom ? glowColorCustom.value : '#007AFF';
+        const glowIntensity = glowIntensitySlider ? parseFloat(glowIntensitySlider.value) : 0.3;
+        const fontSize = fontSizeSelect ? fontSizeSelect.value : '14px';
+        const glowPosition = glowPositionRadio ? glowPositionRadio.value : 'back';
+
+        this.userSettings.windowOpacity = opacity;
+        this.userSettings.glowColor = glowColor;
+        this.userSettings.glowIntensity = glowIntensity;
+        this.userSettings.fontSize = fontSize;
+        this.userSettings.glowPosition = glowPosition;
+
+        await this.saveSettings();
+        this.applySettings();
+        alert('Эффекты успешно применены!');
+        this.playSound(this.clickSound);
+    }
+
+    // ==================== ФОН ====================
+    switchBackgroundType(type) {
+        document.querySelectorAll('.background-options').forEach(el => {
+            el.style.display = 'none';
+        });
+        
+        const optionsElement = document.getElementById(`${type}-options`);
+        if (optionsElement) {
+            optionsElement.style.display = 'block';
+        }
+    }
+
+    selectGradient(element) {
+        document.querySelectorAll('.gradient-option').forEach(opt => {
+            opt.classList.remove('active');
+        });
+        element.classList.add('active');
+        
+        const gradient = element.dataset.gradient;
+        document.body.style.background = gradient;
+        document.body.style.backgroundSize = 'cover';
+    }
+
+    selectGif(element) {
+        const gifUrl = element.dataset.gif;
+        const gifUrlInput = document.getElementById('gif-url');
+        if (gifUrlInput) gifUrlInput.value = gifUrl;
+        
+        document.body.style.background = `url(${gifUrl})`;
+        document.body.style.backgroundSize = 'cover';
+    }
+
+    previewSolidColor(color) {
+        document.body.style.background = color;
+        document.body.style.backgroundSize = 'cover';
+    }
+
+    async saveBackgroundSettings() {
+        const backgroundType = document.getElementById('background-type');
+        const type = backgroundType ? backgroundType.value : 'gradient';
+        let value = '';
+
+        switch (type) {
+            case 'gradient':
+                const activeGradient = document.querySelector('.gradient-option.active');
+                value = activeGradient ? activeGradient.dataset.gradient : 'linear-gradient(135deg, #1a1a2e, #16213e)';
+                break;
+            case 'solid':
+                const solidColor = document.getElementById('solid-color');
+                value = solidColor ? solidColor.value : '#1a1a2e';
+                break;
+            case 'gif':
+                const gifUrl = document.getElementById('gif-url');
+                value = gifUrl ? gifUrl.value.trim() : '';
+                if (!value) {
+                    alert('Введите URL GIF или выберите из примеров');
+                    return;
+                }
+                break;
+            case 'image':
+                if (!this.backgroundImageData) {
+                    alert('Загрузите изображение');
+                    return;
+                }
+                value = this.backgroundImageData;
+                break;
+        }
+
+        this.userSettings.background = {
+            type: type,
+            value: value
+        };
+
+        await this.saveSettings();
+        this.applyBackground(this.userSettings.background);
+        alert('Фон успешно применен!');
+        this.playSound(this.clickSound);
+    }
+
+    uploadBackground() {
+        const backgroundUpload = document.getElementById('background-upload');
+        if (backgroundUpload) backgroundUpload.click();
+    }
+
+    handleBackgroundUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('Пожалуйста, выберите изображение');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.backgroundImageData = e.target.result;
+            
+            const preview = document.getElementById('background-preview');
+            if (preview) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                preview.style.display = 'block';
+            }
+            
+            document.body.style.background = `url(${e.target.result})`;
+            document.body.style.backgroundSize = 'cover';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ==================== СИСТЕМНЫЕ ФУНКЦИИ ====================
+    async saveSettings() {
+        try {
+            await this.apiCall('/api/settings', {
+                method: 'POST',
+                body: JSON.stringify(this.userSettings)
+            });
+        } catch (error) {
+            console.error('Ошибка сохранения настроек:', error);
+        }
+    }
+
+    logout() {
+        if (confirm('Вы уверены, что хотите выйти?')) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            this.currentUser = null;
+            this.token = null;
+            this.activeChatId = null;
+            this.chats = [];
+            this.userSettings = {};
+
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('auth-container').style.display = 'block';
+            
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            
+            if (loginForm) {
+                loginForm.reset();
+                loginForm.style.display = 'block';
+            }
+            if (registerForm) {
+                registerForm.reset();
+                registerForm.style.display = 'none';
+            }
+        }
+    }
+
+    async apiCall(url, options = {}) {
+        if (!this.token) {
+            this.logout();
+            return null;
+        }
+
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        };
+
+        if (options.body && typeof options.body === 'string' && options.body.startsWith('data:')) {
+            defaultOptions.headers['Content-Type'] = 'application/octet-stream';
+        }
+
+        try {
+            const response = await fetch(url, { ...defaultOptions, ...options });
+            
+            if (response.status === 401) {
+                this.logout();
+                return null;
+            }
+
+            if (!response.ok) {
+                let errorMessage = 'Ошибка сервера';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(errorMessage);
+            }
+
+            return response;
+        } catch (error) {
+            console.error('API call error:', error);
+            throw error;
+        }
+    }
+}
+
+// Запуск приложения
+document.addEventListener('DOMContentLoaded', () => {
+    window.messenger = new Messenger();
+});
